@@ -124,8 +124,7 @@ kat_overlap/
 
 ## 🧑‍💻 Auteur
 
-**Aziz T. — KaT Platform**
-📧 [contact@kat-platform.dev](mailto:contact@kat-platform.dev)
+**Aziz T. — KAT Explorer GIS**
 🌐 [https://github.com/AzizT-dev](https://github.com/AzizT-dev)
 
 ---
@@ -162,8 +161,4 @@ Vous pouvez :
 
 `qgis` · `gis` · `spatial` · `overlap` · `intersection` · `vector` · `quality` · `geometry` · `kat-platform`
 
-```
-
----
-(Ça donne un rendu plus pro et visible sur le catalogue QGIS.)
 ```
