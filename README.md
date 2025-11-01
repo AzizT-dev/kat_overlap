@@ -159,6 +159,6 @@ Vous pouvez :
 
 ## 🔖 Mots-clés (tags GitHub)
 
-`qgis` · `gis` · `spatial` · `overlap` · `intersection` · `vector` · `quality` · `geometry` · `kat-platform`
+`qgis` · `gis` · `spatial` · `overlap` · `intersection` · `vector` · `quality` · `geometry` · `kat explorer gis`
 
 ```
