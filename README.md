@@ -1,5 +1,14 @@
 # 🧩 KAT Overlap for QGIS
 
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/AzizT-dev/kat_overlap/releases)
+[![License: GPL v3](https://img.shields.io/badge/license-GPLv3-green.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![QGIS](https://img.shields.io/badge/QGIS-%E2%89%A53.22-brightgreen.svg)](https://qgis.org)
+[![Platform](https://img.shields.io/badge/platform-QGIS%20Plugin-yellow.svg)](https://plugins.qgis.org/)
+[![Issues](https://img.shields.io/github/issues/AzizT-dev/kat_overlap.svg)](https://github.com/AzizT-dev/kat_overlap/issues)
+[![Last Commit](https://img.shields.io/github/last-commit/AzizT-dev/kat_overlap.svg)](https://github.com/AzizT-dev/kat_overlap/commits/main)
+
+---
+
 **KAT Overlap** est un plugin QGIS de **contrôle qualité spatiale**.  
 Il détecte, mesure et classe les zones de **chevauchement géométrique** entre entités vectorielles, que ce soit **dans une même couche** ou **entre plusieurs couches**.  
 
