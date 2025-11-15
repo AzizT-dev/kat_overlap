@@ -305,12 +305,14 @@ Chaque anomalie identifie sa couche origine ✅
 
 ### Mode INTER-COUCHES (2+ couches - v2.3)
 
-| Types | Analyse | Détection | Status |
-|-------|---------|-----------|--------|
-| **Polygone + Polygone** | Recouvrement inter-couches | Surface + ratio | ✅ v2.3 |
-| **Point + Polygone** | Appartenance / Containment | Points internes vs externes | ✅ v2.3 |
-| **Point + Ligne** | Proximité points-lignes | Distance minimale | 🔄 v2.4 |
-| **Ligne + Polygone** | Intersection / Découpage | Topologie | 🔄 v2.4 |
+| Types | Analyse | Détection | Couches | Status |
+|-------|---------|-----------|---------|--------|
+| **Point + Polygone** | Appartenance / Containment | Points internes vs externes | 2+ couches (1 point + 1+ poly) | ✅ v2.3 |
+| **Polygone + Polygone** | Recouvrement inter-couches | Surface + ratio | Jusqu'à 4 polygones | ✅ v2.3 |
+| **Point + Point** | Doublons inter-couches | Distance exacte/proximité | Jusqu'à 4 points | ✅ v2.3 |
+| **Ligne + Ligne** | Topologie inter-couches | Intersections, croisements | Jusqu'à 4 lignes | ✅ v2.3 |
+| **Point + Ligne** | Proximité points-lignes | Distance minimale | 2+ couches (1 point + 1+ line) | 🔄 v2.4 |
+| **Ligne + Polygone** | Intersection / Découpage | Topologie, containment | 2+ couches (1 line + 1+ poly) | 🔄 v2.4 |
 
 ---
 
