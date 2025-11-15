@@ -22,6 +22,13 @@ L'outil s'adapte aux besoins de : **cadastre**, **réseaux**, **cartographie**, 
 - Points (doublons, proximité)
 - Lignes (topologie, intersections)
 - Polygones (chevauchements, auto-intersections)
+- **Point + Polygone** (appartenance / containment inter-couches)
+
+🔄 **Fusion multi-couches automatique (v2.3 NEW)**  
+- Jusqu'à 4 couches du même type fusionnées automatiquement
+- Support : Point-Point, Ligne-Ligne, Polygone-Polygone
+- Champ `__source_layer_id` pour traçabilité complète
+- Analyse unique sur données fusionnées
 
 🔧 **Correction automatique intégrée (v2.3)**  
 - Suppression intelligente des doublons
@@ -196,7 +203,96 @@ Résultats avec identification source
 
 ---
 
-## 🔄 Modes d'analyse disponibles
+## 🔗 Fusion Multi-Couches (v2.3 NEW)
+
+### Qu'est-ce que c'est ?
+
+La fusion multi-couches permet de **traiter automatiquement jusqu'à 4 couches du même type** comme une seule couche logique, sans refactorisation du moteur d'analyse.
+
+### Cas d'usage typiques
+
+```
+Sélectionner :
+├─ Parcelle_Année2020
+├─ Parcelle_Année2021
+├─ Parcelle_Année2022
+└─ Parcelle_Année2023
+
+↓ Fusion automatique en "merged_polygon_4"
+
+Résultats avec __source_layer_id :
+├─ Anomalie 1 : Source = Parcelle_Année2020
+├─ Anomalie 2 : Source = Parcelle_Année2021
+├─ Anomalie 3 : Source = Parcelle_Année2022
+└─ Anomalie 4 : Source = Parcelle_Année2023
+```
+
+### Fonctionnement technique
+
+| Étape | Action |
+|-------|--------|
+| 1️⃣ **Sélection** | Utilisateur coche 4 couches du même type |
+| 2️⃣ **Vérification** | Plugin vérifie compatibilité (structure tabulaire) |
+| 3️⃣ **Fusion** | Création couche temp `merged_[type]_4` en mémoire |
+| 4️⃣ **Traçabilité** | Ajout champ `__source_layer_id` = layer_id original |
+| 5️⃣ **Analyse** | Traitement comme 1 fichier interne |
+| 6️⃣ **Nettoyage** | Suppression couche temp à la fermeture |
+
+### Champ `__source_layer_id`
+
+Chaque entité fusionnée conserve l'ID de sa couche source :
+
+```python
+# Structure après fusion
+merged_polygon_4 :
+  - Feature 1: attributs_origine + __source_layer_id = "layer_uuid_2020"
+  - Feature 2: attributs_origine + __source_layer_id = "layer_uuid_2021"
+  - Feature 3: attributs_origine + __source_layer_id = "layer_uuid_2020"
+  - Feature 4: attributs_origine + __source_layer_id = "layer_uuid_2022"
+
+Résultat :
+  - Anomalie détectée entre Feature 1 et 3
+  - Affichage : "Overlapping features from same source (2020)"
+  - __source_layer_id permet identification / tri
+```
+
+### Limitations & Fallback
+
+| Situation | Comportement |
+|-----------|--------------|
+| **2-4 couches** | ✅ Fusion automatique |
+| **1 couche** | ✅ Traitement direct (pas de fusion) |
+| **5+ couches** | ❌ Limitation : max 4 acceptées |
+| **Structures différentes** | ⚠️ Fallback : utilise 1ère couche |
+| **Types géométriques mixtes** | ❌ Rejet : seulement même type |
+
+### Prérequis pour fusion
+
+✅ **Même type géométrique** : Tous Point OU tous Ligne OU tous Polygone  
+✅ **Même structure** : Même champs (noms + types) dans tous les fichiers  
+✅ **Géométries valides** : Évite les géométries vides/nulles
+
+### Exemple complet
+
+#### Avant v2.3
+```
+Sélectionner 4 polygones → Plugin traite uniquement le 1er
+Résultat : 3 couches ignorées ❌
+```
+
+#### Avec v2.3
+```
+Sélectionner 4 polygones (même structure)
+      ↓
+Plugin fusionne automatiquement
+      ↓
+Traite TOUTES les 4 couches comme 1
+      ↓
+Résultats avec traçabilité source
+Chaque anomalie identifie sa couche origine ✅
+```
+
+---
 
 ### Mode INTERNE (1 couche)
 
@@ -207,14 +303,14 @@ Résultats avec identification source
 | **Lignes** | Topologie | Intersections, extrémités |
 | **Polygones** | Chevauchements | Surface + ratio |
 
-### Mode INTER-COUCHES (2+ couches)
+### Mode INTER-COUCHES (2+ couches - v2.3)
 
-| Types | Analyse | Détection |
-|-------|---------|-----------|
-| **Poly + Poly** | Recouvrement | Surface + ratio |
-| **Point + Poly** | Appartenance | Containment |
-| **Point + Ligne** | Proximité | Distance (v2.4) |
-| **Ligne + Poly** | Intersection | Topologie (v2.4) |
+| Types | Analyse | Détection | Status |
+|-------|---------|-----------|--------|
+| **Polygone + Polygone** | Recouvrement inter-couches | Surface + ratio | ✅ v2.3 |
+| **Point + Polygone** | Appartenance / Containment | Points internes vs externes | ✅ v2.3 |
+| **Point + Ligne** | Proximité points-lignes | Distance minimale | 🔄 v2.4 |
+| **Ligne + Polygone** | Intersection / Découpage | Topologie | 🔄 v2.4 |
 
 ---
 
