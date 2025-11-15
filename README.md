@@ -1,6 +1,6 @@
 # 🧩 KAT Analyse – Overlap Area (Multi-Types) for QGIS
 
-[![Version](https://img.shields.io/badge/version-2.3.0-blue.svg)](https://github.com/AzizT-dev/kat_overlap/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/AzizT-dev/kat_overlap/releases)
 [![License: GPL v3](https://img.shields.io/badge/license-GPLv3-green.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![QGIS](https://img.shields.io/badge/QGIS-%E2%89%A53.22-brightgreen.svg)](https://qgis.org)
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org)
@@ -8,9 +8,9 @@
 
 ---
 
-**KAT Analyse – Overlap Area** est un plugin QGIS universel de **contrôle qualité géométrique** avec **correction automatique intégrée**.
+**KAT Analyse – Overlap Area** est un plugin QGIS universel de **contrôle qualité géométrique et topologique** avec **fusion multi-couches intégrée**.
 
-Il détecte, mesure, classe **et corrige** les anomalies **topologiques et géométriques** pour **tous les types de géométries vectorielles** : **points**, **lignes** et **polygones**.
+Il détecte, mesure, classe et corrige les anomalies pour **tous les types de géométries vectorielles** : **points**, **lignes** et **polygones**, aussi bien en **mode mono-couche** qu'en **mode multi-couches** (jusqu'à 4 couches).
 
 L'outil s'adapte aux besoins de : **cadastre**, **réseaux**, **cartographie**, **topographie**, **gestion foncière** et **analyse environnementale**.
 
@@ -24,22 +24,22 @@ L'outil s'adapte aux besoins de : **cadastre**, **réseaux**, **cartographie**, 
 - Polygones (chevauchements, auto-intersections)
 - **Point + Polygone** (appartenance / containment inter-couches)
 
-🔄 **Fusion multi-couches automatique (v2.3 NEW)**  
+🔄 **Fusion multi-couches automatique**  
 - Jusqu'à 4 couches du même type fusionnées automatiquement
 - Support : Point-Point, Ligne-Ligne, Polygone-Polygone
 - Champ `__source_layer_id` pour traçabilité complète
 - Analyse unique sur données fusionnées
-
-🔧 **Correction automatique intégrée (v2.3)**  
-- Suppression intelligente des doublons
-- Réparation géométrique QGIS
-- Traçabilité complète des modifications
 
 🎨 **Interface intuitive et ergonomique**  
 - Sélection rapide (header cliquable)
 - Zoom interactif sur anomalies
 - Filtrage dynamique par gravité
 - Export sélection uniquement
+
+🔧 **Correction intégrée**  
+- Suppression intelligente des doublons
+- Réparation géométrique QGIS
+- Traçabilité complète des modifications
 
 📊 **Classification intelligente**  
 - Profils métier contextuels (Cadastre, BTP, Topographie, Hydrologie)
@@ -95,7 +95,7 @@ zip -r kat_overlap.zip kat_overlap/
 4. Définir proximité : 0.5 m
 5. Cliquer "▶️ Lancer l'analyse"
 6. Dans les résultats : cocher les doublons à supprimer
-7. Cliquer "🔧 Corriger" → nouvelle couche créée automatiquement
+7. Cliquer "🛠 Corriger" → nouvelle couche créée automatiquement
 ```
 
 ### Exemple 2 : Identifier chevauchements polygones
@@ -108,13 +108,14 @@ zip -r kat_overlap.zip kat_overlap/
 6. Export des résultats
 ```
 
-### Exemple 3 : Valider topologie de lignes
+### Exemple 3 : Fusionner 4 couches de parcelles
 ```
-1. Sélectionner la couche lignes
-2. Mode : "Une seule couche"
-3. Tolérance : 0.1 m
-4. Analyse lance automatiquement
-5. Zoom sur les intersections détectées
+1. Sélectionner 4 couches polygones (Parcelle_2020, 2021, 2022, 2023)
+2. Même structure tabulaire ? → Oui ✅
+3. Lancer l'analyse
+4. Plugin fusionne automatiquement
+5. Détecte anomalies dans les 4 couches
+6. Résultats avec __source_layer_id (identifie la source)
 ```
 
 ---
@@ -128,13 +129,13 @@ kat_overlap/
 ├── 📄 README.md                   # Cette documentation
 ├── 📄 __init__.py                 # Initialisation
 ├── 📜 kat_overlap.py              # Point d'entrée principal
-├── 🎨 kat_overlap_ui.py           # Interface utilisateur (2110+ lignes)
+├── 🎨 kat_overlap_ui.py           # Interface utilisateur
 │
 ├── 📁 core/
 │   ├── __init__.py
 │   ├── 📊 analysis_task.py        # Moteur d'analyse (QGIS Task)
 │   ├── 🏷️  classification.py      # Profils métier + classification
-│   └── 🏗️  layer_manager.py       # Gestion + fusion couches (v2.3)
+│   └── 🏗️  layer_manager.py       # Gestion + fusion couches
 │
 ├── 📁 utils/
 │   ├── __init__.py
@@ -160,12 +161,12 @@ UI (kat_overlap_ui.py)
     ↓
 run_analysis() → get_selected_layers()
     ↓
-[NOUVEAU v2.3] Fusion multi-couches si N couches du même type
+[NEW] Fusion multi-couches si N couches du même type
     ↓
 AnalysisTask (analysis_task.py)
-    ├─ _analyze_self_overlaps()       # Points / Lignes / Polygones
-    ├─ _analyze_inter_layer_overlaps()  # Multi-couches
-    └─ _analyze_points_in_polygons()   # Point/Polygone
+    ├─ _analyze_self_overlaps()       # Points / Lignes / Polygones mono-couche
+    ├─ _analyze_inter_layer_overlaps()  # Multi-couches (Poly+Poly, Point+Point, etc)
+    └─ _analyze_points_in_polygons()   # Point + Polygone
     ↓
 classification.py → PresetManager
     ├─ classify_point_proximity()      # Gravité points
@@ -174,15 +175,15 @@ classification.py → PresetManager
     ↓
 Résultats → Tableau + Couche résultats
     ↓
-[NOUVEAU v2.3] Correction automatique via layer_manager.py
+[NEW] Correction automatique via layer_manager.py
     ├─ Points : delete features
     ├─ Lignes : delete features
     └─ Polygones : QGIS "Repair geometries"
 ```
 
-### Fusion multi-couches (v2.3)
+### Fusion multi-couches
 ```
-N couches sélectionnées
+N couches sélectionnées (même type)
     ↓
 get_selected_layers()
     ↓
@@ -203,7 +204,36 @@ Résultats avec identification source
 
 ---
 
-## 🔗 Fusion Multi-Couches (v2.3 NEW)
+## 🔄 Modes d'analyse disponibles
+
+### Mode INTERNE (1 couche)
+
+| Type | Analyse | Détection |
+|------|---------|-----------|
+| **Points** | Doublons | Distance exacte |
+| **Points** | Proximité | Distance < seuil |
+| **Lignes** | Topologie | Intersections, extrémités |
+| **Polygones** | Chevauchements | Surface + ratio |
+
+### Mode INTER-COUCHES (2+ couches - v1.0)
+
+| Types | Analyse | Détection | Couches |
+|-------|---------|-----------|---------|
+| **Point + Polygone** | Appartenance / Containment | Points internes vs externes | 2+ couches (1 point + 1+ poly) |
+| **Polygone + Polygone** | Recouvrement inter-couches | Surface + ratio | Jusqu'à 4 polygones |
+| **Point + Point** | Doublons inter-couches | Distance exacte/proximité | Jusqu'à 4 points |
+| **Ligne + Ligne** | Topologie inter-couches | Intersections, croisements | Jusqu'à 4 lignes |
+
+### Modes FUTURS (v1.1+)
+
+| Types | Analyse | Détection | Couches |
+|-------|---------|-----------|---------|
+| **Point + Ligne** | Proximité points-lignes | Distance minimale | 2+ couches (1 point + 1+ line) |
+| **Ligne + Polygone** | Intersection / Découpage | Topologie, containment | 2+ couches (1 line + 1+ poly) |
+
+---
+
+## 🔗 Fusion Multi-Couches
 
 ### Qu'est-ce que c'est ?
 
@@ -272,48 +302,6 @@ Résultat :
 ✅ **Même structure** : Même champs (noms + types) dans tous les fichiers  
 ✅ **Géométries valides** : Évite les géométries vides/nulles
 
-### Exemple complet
-
-#### Avant v2.3
-```
-Sélectionner 4 polygones → Plugin traite uniquement le 1er
-Résultat : 3 couches ignorées ❌
-```
-
-#### Avec v2.3
-```
-Sélectionner 4 polygones (même structure)
-      ↓
-Plugin fusionne automatiquement
-      ↓
-Traite TOUTES les 4 couches comme 1
-      ↓
-Résultats avec traçabilité source
-Chaque anomalie identifie sa couche origine ✅
-```
-
----
-
-### Mode INTERNE (1 couche)
-
-| Type | Analyse | Détection |
-|------|---------|-----------|
-| **Points** | Doublons | Distance exacte |
-| **Points** | Proximité | Distance < seuil |
-| **Lignes** | Topologie | Intersections, extrémités |
-| **Polygones** | Chevauchements | Surface + ratio |
-
-### Mode INTER-COUCHES (2+ couches - v2.3)
-
-| Types | Analyse | Détection | Couches | Status |
-|-------|---------|-----------|---------|--------|
-| **Point + Polygone** | Appartenance / Containment | Points internes vs externes | 2+ couches (1 point + 1+ poly) | ✅ v2.3 |
-| **Polygone + Polygone** | Recouvrement inter-couches | Surface + ratio | Jusqu'à 4 polygones | ✅ v2.3 |
-| **Point + Point** | Doublons inter-couches | Distance exacte/proximité | Jusqu'à 4 points | ✅ v2.3 |
-| **Ligne + Ligne** | Topologie inter-couches | Intersections, croisements | Jusqu'à 4 lignes | ✅ v2.3 |
-| **Point + Ligne** | Proximité points-lignes | Distance minimale | 2+ couches (1 point + 1+ line) | 🔄 v2.4 |
-| **Ligne + Polygone** | Intersection / Découpage | Topologie, containment | 2+ couches (1 line + 1+ poly) | 🔄 v2.4 |
-
 ---
 
 ## 📊 Classification de gravité
@@ -329,7 +317,7 @@ Chaque anomalie est classée selon le profil métier sélectionné :
 
 ---
 
-## 🎯 Profils métier
+## 🎓 Profils métier
 
 ### 1️⃣ Cadastre & Foncier
 ```
@@ -338,7 +326,6 @@ Mode: Points groupés par ID parcelle
 Tolérance: 0.001 m (1 mm)
 Profil: Foncier/Cadastre (±2m GPS)
 Objectif: Détecter vrais doublons, ignorer points partagés
-Correction: Suppression points en doublon
 ```
 
 ### 2️⃣ BTP & Routes
@@ -348,7 +335,6 @@ Mode: Points strict
 Tolérance: 0.5 m
 Profil: BTP/Construction (±0.05m RTK)
 Objectif: Contrôle qualité implantation
-Correction: Fusion ou suppression automatique
 ```
 
 ### 3️⃣ Topographie
@@ -358,7 +344,6 @@ Mode: Lignes + points
 Tolérance: 0.01 m
 Profil: Topographie (±0.01m Station)
 Objectif: Validations topologiques
-Correction: Réparation QGIS
 ```
 
 ### 4️⃣ Hydrologie
@@ -368,32 +353,7 @@ Mode: Polygones multi-couches
 Tolérance: 10 m
 Profil: Hydrologie (±10m SIG)
 Objectif: Chevauchements acceptables?
-Correction: Décision interactive
 ```
-
----
-
-## 🔧 Nouvelles fonctionnalités v2.3
-
-### ✨ Correction automatique
-- ✅ Système de correction intégré en 1 clic
-- ✅ Colonne "Action" : Conserver / Supprimer
-- ✅ Génération automatique couche corrigée
-- ✅ Traçabilité complète (couche source préservée)
-
-### 🎨 Interface améliorée
-- ✅ **Header cliquable** : Sélectionner/désélectionner tout
-- ✅ **Bouton Zoom** : Zoom intelligent sur sélection
-- ✅ **Bouton Corriger** : Lance correction automatique
-- ✅ **Filtres simplifiés** : Options gravité claires
-- ✅ **Export sélection** : Exporte uniquement lignes cochées
-
-### 🚀 Fusion multi-couches (automatique)
-- ✅ Détection N couches du même type
-- ✅ Vérification compatibilité (structure tabulaire)
-- ✅ Fusion transparente en couche temp
-- ✅ Champ `__source_layer_id` pour traçabilité
-- ✅ Nettoyage automatique à la fermeture
 
 ---
 
@@ -432,36 +392,34 @@ export_layer_to_xlsx(
 
 ## 🧪 Tests & Validation
 
-### Test 1 : Régression (1 couche)
+### Test 1 : Analyse mono-couche (1 polygone)
 ```
-✓ Sélectionner 1 polygone
+✓ Sélectionner 1 couche polygone
 ✓ Lancer analyse
-✓ Résultats attendus = avant v2.3
+✓ Résultats contiennent auto-chevauchements
 ```
 
 ### Test 2 : Fusion 2-4 couches
 ```
-✓ Sélectionner 4 polygones (même structure)
+✓ Sélectionner 4 couches polygones (même structure)
 ✓ Lancer analyse
 ✓ Log : "✅ Fusion polygon: X entités (4 couches)"
 ✓ Résultats avec __source_layer_id
 ```
 
-### Test 3 : Correction automatique
+### Test 3 : Compatibilité
 ```
-✓ Analyser résultats
-✓ Cocher lignes à corriger
-✓ Sélectionner "Supprimer" dans Action
-✓ Cliquer "🔧 Corriger"
-✓ Nouvelle couche "_corrigé" créée
-✓ Vérifier absence d'anomalies
+✓ Sélectionner 2 polygones (structures différentes)
+✓ Lancer analyse
+✓ Log : "❌ Incompatibilité polygon: noms de champs différents"
+✓ Fallback : traitement avec 1ère couche uniquement
 ```
 
-### Test 4 : Fermeture plugin
+### Test 4 : Nettoyage à la fermeture
 ```
 ✓ Lancer analyse 4 couches
 ✓ Fermer le plugin
-✓ Vérifier : couches "merged_*" supprimées
+✓ Vérifier : couches "merged_*" supprimées de QGIS
 ```
 
 ---
@@ -507,7 +465,7 @@ Solution:
 
 ---
 
-## 📊 Dépendances
+## 🧾 Dépendances
 
 | Librairie | Rôle | Installation | Requis |
 |-----------|------|--------------|--------|
@@ -519,102 +477,148 @@ Solution:
 
 ---
 
-## 🎓 Documentation complète
+## 📊 Exemples d'application
 
-| Document | Contenu |
-|----------|---------|
-| **[User Guide](docs/user_guide.pdf)** | Guide utilisateur complet |
-| **[Config Guide](docs/universal_config_guide.md)** | Configuration par profil |
-| **[Developer Guide](docs/developer_guide.md)** | Architecture + API |
-| **[Correction Guide](docs/correction_guide_v23.md)** | 🆕 Correction automatique |
-| **[Workflow Examples](docs/workflow_examples.md)** | Cas d'usage pratiques |
-| **[FAQ](docs/faq.md)** | Questions fréquentes |
-
----
-
-## 🗺️ Feuille de route
-
-### ✅ v2.3 (Novembre 2025)
-- [x] Correction automatique
-- [x] Interface améliorée (header, boutons)
-- [x] Fusion multi-couches
-- [x] Export sélection
-
-### 🔄 v2.4 (Décembre 2025)
-- [ ] Dialogue interactif Point/Polygone
-- [ ] Historique corrections
-- [ ] Annulation/Rétablissement
-- [ ] Prévisualisation avant correction
-
-### 🚀 v3.0 (Q1 2026)
-- [ ] Mode batch
-- [ ] Correction avancée (snapping)
-- [ ] Statistiques qualité globales
-- [ ] PostGIS integration
-- [ ] Rapport PDF avec cartes
+| Contexte | Type de données | Objectif | Mode recommandé |
+|----------|----------------|----------|-----------------|
+| Cadastre | Points (sommets) | Détecter vrais doublons | Groupé par ID parcelle |
+| Routes | Lignes | Valider topologie | Une couche, tolérance 0.01m |
+| Réseaux | Points (équipements) | Détecter doublons | Strict, proximité 1m |
+| Parcelles | Polygones | Identifier chevauchements | Une couche, surface 0.01m² |
+| Échantillonnage | Point + Polygone | Vérifier appartenance | Multi-couches |
+| SIG multi-sources | Tous types | Contrôle qualité complet | Plusieurs analyses |
 
 ---
 
-## 👨‍💻 Contribution
+## 🎯 Avantages compétitifs
 
-Les contributions sont bienvenues ! 🙏
+### vs GRASS v.clean
+✅ Interface intuitive  
+✅ Pas de dépendance externe  
+✅ Classification automatique  
+✅ Support multi-types natif  
+✅ Fusion multi-couches intégrée
 
-### Pour contribuer :
-1. Fork le dépôt
-2. Créer une branche (`git checkout -b feature/MyFeature`)
-3. Commit (`git commit -m 'Add MyFeature'`)
-4. Push (`git push origin feature/MyFeature`)
-5. Ouvrir une Pull Request
+### vs Topology Checker
+✅ Analyse inter-couches  
+✅ Rapport exportable  
+✅ Filtrage dynamique  
+✅ Modes contextuels (strict/groupé)  
+✅ Correction intégrée
 
-### À améliorer :
-- 🌍 Traductions (FR/EN/ES)
-- 🐛 Signaler des bugs
-- 💡 Suggestions d'améliorations
-- 📖 Améliorer documentation
-- ⭐ Retours d'expérience
+### vs Processing Algorithms
+✅ Workflow intégré  
+✅ Visualisation immédiate  
+✅ Export formaté  
+✅ Zoom interactif sur anomalies  
+✅ Fusion multi-couches automatique
+
+---
+
+## 🧑‍💻 Auteur
+
+**Aziz T. — KAT Explorer GIS**  
+🌐 [https://github.com/AzizT-dev](https://github.com/AzizT-dev)  
+📧 aziz.explorer@gmail.com
 
 ---
 
 ## ⚖️ Licence
 
-Distribué sous **GPL-3.0**.  
-Libre d'utilisation, modification et redistribution.
+Ce projet est distribué sous la **licence GNU General Public License v3.0 (GPL-3.0)**.  
+Vous êtes libre d'utiliser, modifier et redistribuer le code tant que la même licence est conservée.
 
-📄 Voir [LICENSE](./LICENSE)
+📄 Voir le fichier [`LICENSE`](./LICENSE) pour le texte complet.
 
 ---
 
-## 📧 Contact & Support
+## 🧾 Journal des versions
 
-**Auteur** : Aziz T. — KAT Explorer GIS  
-**Email** : aziz.explorer@gmail.com  
-**GitHub** : [@AzizT-dev](https://github.com/AzizT-dev)
+| Version | Date | Changements majeurs |
+|---------|------|---------------------|
+| **1.0.0** | 2025-11-15 | 🎉 **Version initiale**<br>✅ Support Points, Lignes, Polygones<br>✅ Modes strict et groupé pour points<br>✅ Analyse topologique des lignes<br>✅ Multi-couches avec ID distincts<br>✅ Classification contextuelle<br>✅ Export Excel robuste<br>✅ **Fusion multi-couches (NEW)**<br>✅ **Correction intégrée (NEW)**<br>✅ **Interface moderne (NEW)** |
+
+---
+
+## 🗺️ Feuille de route
+
+### ✅ Version 1.0 (Actuelle - Novembre 2025)
+- [x] Système d'analyse multi-types
+- [x] Fusion multi-couches automatique
+- [x] Correction intégrée
+- [x] Interface moderne
+- [x] Export multi-formats
+- [x] Classification intelligente
+
+### 🔄 Version 1.1 (Planifiée Q4 2025)
+- [ ] Mode Point + Ligne
+- [ ] Mode Ligne + Polygone
+- [ ] Historique des corrections
+- [ ] Annulation/Rétablissement
+- [ ] Prévisualisation avant correction
+
+### 🚀 Version 2.0 (Planifiée Q1 2026)
+- [ ] Mode batch (traiter plusieurs couches)
+- [ ] Correction avancée avec snapping
+- [ ] Statistiques de qualité globales
+- [ ] API REST pour automatisation
+- [ ] Intégration PostGIS
+- [ ] Rapport PDF avec cartes intégrées
+
+---
+
+## 💬 Retours et contributions
+
+Vous pouvez :
+- 🐛 Signaler un bug via [GitHub Issues](https://github.com/AzizT-dev/kat_overlap/issues)
+- 💡 Proposer des améliorations
+- 🌍 Contribuer aux traductions (FR / EN / ES)
+- 📖 Améliorer la documentation
+- ⭐ Partager vos retours d'expérience
+- 🔧 Soumettre des Pull Requests
+
+**Processus de contribution** :
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/AmazingFeature`)
+3. Commit vos changements (`git commit -m 'Add AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrir une Pull Request
+
+---
+
+## 📚 Documentation complète
+
+- 📘 [Guide utilisateur](docs/user_guide.md)
+- 🎓 [Guide de configuration](docs/config_guide.md)
+- 🔧 [Guide développeur](docs/developer_guide.md)
+- 🐛 [FAQ & Troubleshooting](docs/faq.md)
 
 ---
 
 ## 🙏 Remerciements
 
-- Communauté QGIS pour l'API robuste
-- Testeurs beta pour retours précieux
-- Utilisateurs signalant bugs et suggestions
+Merci à la communauté QGIS pour l'API robuste et la documentation excellente.  
+Merci aux testeurs beta pour leurs retours précieux.  
+Merci aux utilisateurs pour leurs suggestions d'amélioration.
 
 ---
 
-## 📈 Statistiques
+## 📊 Statistiques du projet
 
-![Stars](https://img.shields.io/github/stars/AzizT-dev/kat_overlap?style=social)
-![Forks](https://img.shields.io/github/forks/AzizT-dev/kat_overlap?style=social)
-![Issues](https://img.shields.io/github/issues/AzizT-dev/kat_overlap)
-![Last Commit](https://img.shields.io/github/last-commit/AzizT-dev/kat_overlap)
+![GitHub stars](https://img.shields.io/github/stars/AzizT-dev/kat_overlap?style=social)
+![GitHub forks](https://img.shields.io/github/forks/AzizT-dev/kat_overlap?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/AzizT-dev/kat_overlap?style=social)
+
+---
+
+**⭐ Si ce plugin vous est utile, n'oubliez pas de mettre une étoile sur GitHub !**
 
 ---
 
 <div align="center">
   
-### ⭐ Si ce plugin vous est utile, n'oubliez pas une étoile ! ⭐
+### 🚀 Développé avec ❤️ par KAT Explorer GIS
 
-### 🚀 Testez la v2.3 et partagez vos retours !
-
-**Développé avec ❤️ par KAT Explorer GIS**
+**v1.0.0 - Novembre 2025**
 
 </div>
