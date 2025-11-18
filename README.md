@@ -505,33 +505,6 @@ Vous êtes libre d'utiliser, modifier et redistribuer le code tant que la même 
 
 ---
 
-## 🗺️ Feuille de route
-
-### ✅ Version 1.0 (Actuelle - Novembre 2025)
-- [x] Système d'analyse multi-types
-- [x] Fusion multi-couches automatique
-- [x] Correction intégrée
-- [x] Interface moderne
-- [x] Export multi-formats
-- [x] Classification intelligente
-
-### 🔄 Version 1.1 (Planifiée Q4 2025)
-- [ ] Mode Point + Ligne
-- [ ] Mode Ligne + Polygone
-- [ ] Historique des corrections
-- [ ] Annulation/Rétablissement
-- [ ] Prévisualisation avant correction
-
-### 🚀 Version 2.0 (Planifiée Q1 2026)
-- [ ] Mode batch (traiter plusieurs couches)
-- [ ] Correction avancée avec snapping
-- [ ] Statistiques de qualité globales
-- [ ] API REST pour automatisation
-- [ ] Intégration PostGIS
-- [ ] Rapport PDF avec cartes intégrées
-
----
-
 ## 💬 Retours et contributions
 
 Vous pouvez :
