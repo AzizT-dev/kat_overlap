@@ -221,13 +221,6 @@ Résultats avec identification source
 | **Point + Point** | Doublons inter-couches | Distance exacte/proximité | Jusqu'à 4 points |
 | **Ligne + Ligne** | Topologie inter-couches | Intersections, croisements | Jusqu'à 4 lignes |
 
-### Modes FUTURS (v1.1+)
-
-| Types | Analyse | Détection | Couches |
-|-------|---------|-----------|---------|
-| **Point + Ligne** | Proximité points-lignes | Distance minimale | 2+ couches (1 point + 1+ line) |
-| **Ligne + Polygone** | Intersection / Découpage | Topologie, containment | 2+ couches (1 line + 1+ poly) |
-
 ---
 
 ## 🔗 Fusion Multi-Couches
