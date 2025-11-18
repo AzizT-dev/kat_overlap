@@ -144,11 +144,8 @@ kat_overlap/
 │
 └── 📁 i18n/
     ├── kat_overlap_fr.qm          # Français compilé
-    ├── kat_overlap_fr.ts          # Français source
     ├── kat_overlap_en.qm          # Anglais compilé
-    ├── kat_overlap_en.ts          # Anglais source
-    ├── kat_overlap_es.qm          # Espagnol compilé
-    └── kat_overlap_es.ts          # Espagnol source
+    └── kat_overlap_es.qm          # Espagnol compilé
 ```
 
 ---
