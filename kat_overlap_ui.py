@@ -1,0 +1,749 @@
+# -*- coding: utf-8 -*-
+"""
+KAT Analyse – Overlap UI
+Main user interface - cleaned version using extracted modules
+
+Author: Aziz T.
+Copyright: (C) 2025 KaT - Tous droits réservés
+License: GPLv3
+Version: 1.0.0
+"""
+from PyQt5.QtWidgets import (
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
+    QComboBox, QTableWidget, QTableWidgetItem, QGroupBox,
+    QFrame, QSplitter, QAbstractItemView, QWidget, QMessageBox
+)
+from PyQt5.QtCore import Qt, pyqtSignal, QTimer
+from PyQt5.QtGui import QColor
+
+import os, sys, traceback
+from typing import Dict, Any, List, Optional
+from PyQt5.QtWidgets import QTextEdit
+from qgis.core import QgsProject, QgsVectorLayer, QgsApplication
+from qgis.utils import iface as qgis_iface
+
+# Plugin path
+plugin_dir = os.path.dirname(__file__)
+if plugin_dir not in sys.path:
+    sys.path.append(plugin_dir)
+
+# Original imports
+from .ui.theme import get_light_style, get_dark_style
+from .core.analysis_task import AnalysisTask
+from .core.classification import PresetManager
+
+# NEW: Modular imports
+from .utils.result_layer_utils import ResultLayerBuilder
+from .core.layer_helpers import LayerSelectionManager
+from .core.ui_export_manager import UIExportManager
+from .core.correction_manager import CorrectionManager
+from .core.visualization import VisualizationManager
+from .ui.panels import UIPanels
+from .core.results_table_manager import ResultsTableManager
+from .core.temp_layer_manager import TempLayerManager
+
+LOG_TAG = "kat_overlap.ui"
+
+
+class ModernKatOverlapUI(QDialog):
+    """Main UI dialog for KAT Overlap analysis - Modularized version"""
+    
+    theme_changed = pyqtSignal(str)
+    analysis_requested = pyqtSignal(dict)
+    layers_requested = pyqtSignal()
+
+    def __init__(self, parent=None, iface=None):
+        super().__init__(parent)
+        self.iface = iface or qgis_iface
+        self.current_theme = "light"
+        self.selected_rows = set()
+        self.overlap_geometries = []
+        self.selected_layers = set()
+
+        # Frameless window to keep only our custom title bar
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+        self.resize(1200, 800)
+
+        self.apply_theme(self.current_theme)
+        self._init_state()
+        self.init_ui()
+        self.load_project_layers()
+
+        self.update_timer = QTimer()
+        self.update_timer.timeout.connect(self.check_project_changes)
+        self.update_timer.start(2000)
+        self.last_layer_count = len(QgsProject.instance().mapLayers())
+
+    def _init_state(self):
+        """Initialize internal state"""
+        self.task = None
+        self.all_layers = []
+        self.id_fields: Dict[str, str] = {}
+        self.layer_widgets: Dict[str, Dict[str, Any]] = {}
+        self.result_layer = None
+        self._original_results: List[Dict[str, Any]] = []
+        self.params = {}
+        self._current_rubber_bands = []
+        
+        from qgis.core import QgsDistanceArea
+        self.da = QgsDistanceArea()
+        try:
+            self.da.setEllipsoid(QgsProject.instance().ellipsoid())
+            self.da.setSourceCrs(QgsProject.instance().crs(), QgsProject.instance().transformContext())
+        except Exception:
+            pass
+
+    # ========================================================================
+    # THEME
+    # ========================================================================
+    
+    def apply_theme(self, theme):
+        """Apply UI theme"""
+        self.current_theme = theme        
+        if theme == "dark":
+            stylesheet = get_dark_style()
+        else:
+            stylesheet = get_light_style()
+        
+        self.setStyleSheet(stylesheet)
+        self.theme_changed.emit(theme)
+
+    # ========================================================================
+    # UI CREATION
+    # ========================================================================
+    
+    def init_ui(self):
+        """Initialize main UI layout"""
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        title_bar = self._create_title_bar()
+        main_layout.addWidget(title_bar)
+
+        content_widget = QWidget()
+        content_layout = QVBoxLayout()
+        content_layout.setContentsMargins(8, 8, 8, 8)
+
+        splitter = QSplitter(Qt.Horizontal)
+        left_panel = self.create_left_panel()
+        right_panel = self.create_right_panel()
+        splitter.addWidget(left_panel)
+        splitter.addWidget(right_panel)
+        splitter.setSizes([360, 840])
+
+        content_layout.addWidget(splitter)
+        content_widget.setLayout(content_layout)
+        main_layout.addWidget(content_widget)
+        self.setLayout(main_layout)
+
+    def _create_title_bar(self):
+        """Create custom title bar"""
+        title_bar = QWidget()
+        title_bar.setFixedHeight(36)
+        title_bar.setStyleSheet("""
+            #titleBar {
+                background-color: #2c3e50;
+                border: none;
+            }
+            QLabel#titleLabel {
+                color: #e6e8ff;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton#windowControl {
+                background-color: transparent;
+                border: none;
+                color: #e6e8ff;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            QPushButton#windowControl:hover {
+                background-color: #34495e;
+            }
+            QPushButton#closeBtn {
+                background-color: transparent;
+                border: none;
+                color: #e6e8ff;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            QPushButton#closeBtn:hover {
+                background-color: #e74c3c;
+            }
+        """)        
+        title_layout = QHBoxLayout(title_bar)
+        title_layout.setContentsMargins(12, 0, 8, 0)
+        title_label = QLabel(self.tr("KAT Analyse – Overlap area v1.0.0"))
+        title_layout.addWidget(title_label)
+        title_layout.addStretch(1)
+        
+        minimize_btn = QPushButton("–")
+        minimize_btn.clicked.connect(self.showMinimized)
+        maximize_btn = QPushButton("□")
+        maximize_btn.clicked.connect(self.toggle_maximize)
+        close_btn = QPushButton("×")
+        close_btn.clicked.connect(self.close)
+        
+        title_layout.addWidget(minimize_btn)
+        title_layout.addWidget(maximize_btn)
+        title_layout.addWidget(close_btn)
+        return title_bar
+
+    def toggle_maximize(self):
+        """Toggle maximize/normal window state"""
+        if self.isMaximized():
+            self.showNormal()
+        else:
+            self.showMaximized()
+
+    def check_project_changes(self):
+        """Check for project changes and refresh UI if needed"""
+        try:
+            current_count = len(QgsProject.instance().mapLayers())
+            if current_count != self.last_layer_count:
+                self.load_project_layers()
+                self.last_layer_count = current_count
+        except Exception:
+            pass
+
+    def create_left_panel(self):
+        """Create left panel with layer selection and parameters"""
+        panel = QFrame()
+        layout = QVBoxLayout()
+        layout.setSpacing(8)
+
+        # Layers table
+        layers_group = QGroupBox(self.tr("Sélection des couches"))
+        layers_group.setToolTip(self.tr("""
+         Traitements disponibles :
+        • Mono-couche :
+         1 couche points → Analyse des doublons/proximité
+         1 couche lignes → Vérification topologique  
+         1 couche polygones → Auto-intersections
+
+        • Multi-couches (même type) :
+         2-4 couches points → Analyse des proximités
+         2-4 couches lignes → Vérification topologique
+         2-4 couches polygones → Recouvrements inter-couches
+
+        • Combinaisons mixtes :
+         Points + Polygones → Association points-polygones
+        """))
+        layers_layout = QVBoxLayout()
+        self.layers_table = QTableWidget()
+        self.layers_table.setColumnCount(4)
+        self.layers_table.setHorizontalHeaderLabels([
+            self.tr("Sélection"), 
+            self.tr("Couche"), 
+            self.tr("Type"), 
+            self.tr("Champ ID")
+        ])
+        self.layers_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.layers_table.verticalHeader().setVisible(False)
+        self.layers_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.layers_table.setMinimumHeight(300)
+        self.layers_table.verticalHeader().setDefaultSectionSize(40)
+        self.layers_table.setColumnWidth(3, 150)
+        layers_layout.addWidget(self.layers_table)
+        layers_group.setLayout(layers_layout)
+        layout.addWidget(layers_group)
+
+        # Parameters
+        params_group = QGroupBox(self.tr("Paramètres d'analyse"))
+        params_layout = QVBoxLayout()
+        self.profile_combo = QComboBox()
+        try:
+            self.profile_combo.addItems(PresetManager.get_profile_names())
+        except Exception:
+            self.profile_combo.addItem(self.tr("Personnalisé"))
+        params_layout.addWidget(QLabel(self.tr("Profil métier")))
+        params_layout.addWidget(self.profile_combo)
+        self.profile_combo.currentTextChanged.connect(self._on_profile_selection_changed)
+        params_group.setLayout(params_layout)
+        layout.addWidget(params_group)
+
+        # CRS group - MODULARIZED
+        crs_group = UIPanels.create_crs_group(self)
+        layout.addWidget(crs_group)
+
+        # Options - MODULARIZED
+        options_group = UIPanels.create_options_group(self)
+        layout.addWidget(options_group)
+
+        # Action buttons
+        btn_layout = QHBoxLayout()
+        self.btn_analyze = QPushButton(self.tr("▶️ Lancer l'analyse"))
+        self.btn_analyze.clicked.connect(self.run_analysis)
+        self.btn_cancel = QPushButton(self.tr("❌ Annuler"))
+        self.btn_cancel.clicked.connect(self._cancel_task)
+        self.btn_cancel.setEnabled(False)
+        self.reset_ui_btn = QPushButton(self.tr("🔄 Réinitialiser UI"))
+        self.reset_ui_btn.clicked.connect(self._on_reset_ui)
+        
+        btn_layout.addWidget(self.btn_analyze)
+        btn_layout.addWidget(self.btn_cancel)
+        btn_layout.addWidget(self.reset_ui_btn)
+        layout.addLayout(btn_layout)
+        layout.addStretch()
+        panel.setLayout(layout)
+        return panel
+
+    def create_right_panel(self):
+        """Create right panel with results table and stats"""
+        panel = QFrame()
+        layout = QVBoxLayout()
+        layout.setSpacing(8)
+
+        # Stats + filters row
+        header_layout = QHBoxLayout()
+        stats_layout = QHBoxLayout()
+        self.stats_data = [
+            (self.tr("Total"), "0", "#3498db"),
+            (self.tr("Critique"), "0", "#e74c3c"),
+            (self.tr("Élevé"), "0", "#e67e22"),
+            (self.tr("Modéré"), "0", "#f39c12"),
+            (self.tr("Faible"), "0", "#27ae60")
+        ]
+        self.stat_labels = {}
+        for label, value, color in self.stats_data:
+            f = QFrame()
+            f.setStyleSheet("padding:6px;")
+            fl = QVBoxLayout()
+            fl.setSpacing(2)
+            val_lbl = QLabel(value)
+            val_lbl.setStyleSheet(f"color:{color}; font-weight:bold;")
+            txt_lbl = QLabel(label)
+            txt_lbl.setStyleSheet("color:#7f8c8d; font-size:10px;")
+            fl.addWidget(val_lbl)
+            fl.addWidget(txt_lbl)
+            f.setLayout(fl)
+            stats_layout.addWidget(f)
+            self.stat_labels[label] = val_lbl
+        header_layout.addLayout(stats_layout)
+
+        # Filters widget
+        filter_widget = self._create_filters_widget()
+        header_layout.addWidget(filter_widget)
+        header_layout.addStretch()
+        layout.addLayout(header_layout)
+
+        # Results table
+        self.create_results_table()
+        layout.addWidget(self.results_table)
+
+        # Action buttons
+        btns_row = QHBoxLayout()
+        self.export_btn = QPushButton(self.tr("Exporter sélection"))
+        self.export_btn.clicked.connect(self.export_results)
+        self.export_btn.setEnabled(False)
+        
+        self.correct_btn = QPushButton(self.tr("Corriger sélection"))
+        self.correct_btn.clicked.connect(self._on_correct_selection)
+        self.correct_btn.setEnabled(False)
+        
+        self.export_layer_btn = QPushButton(self.tr("Exporter couche résultats"))
+        self.export_layer_btn.clicked.connect(self.export_result_layer)
+        self.export_layer_btn.setEnabled(False)
+        
+        btns_row.addWidget(self.export_btn)
+        btns_row.addWidget(self.correct_btn)
+        btns_row.addWidget(self.export_layer_btn)
+        btns_row.addStretch()
+        layout.addLayout(btns_row)
+
+        # Logs
+        self.log_text = QTextEdit()
+        self.log_text.setReadOnly(True)
+        self.log_text.setMaximumHeight(140)
+        layout.addWidget(self.log_text)
+        
+        panel.setLayout(layout)
+        return panel
+
+    def _create_filters_widget(self):
+        """Create filters widget"""
+        filter_container = QGroupBox(self.tr("Filtres et Actions"))
+        layout = QVBoxLayout()
+        h = QHBoxLayout()
+        h.addWidget(QLabel(self.tr("Filtre par gravité:")))
+        self.combo_severity_filter = QComboBox()
+        self.combo_severity_filter.addItems([
+            self.tr("Tout"), 
+            self.tr("Critique"), 
+            self.tr("Élevé"), 
+            self.tr("Modéré"), 
+            self.tr("Faible"),
+            self.tr("Critique + Élevée"), 
+            self.tr("Modéré + Faible")
+        ])
+        self.combo_severity_filter.setEnabled(True)
+        self.combo_severity_filter.currentIndexChanged.connect(self._on_severity_filter_changed)
+        h.addWidget(self.combo_severity_filter)
+        h.addStretch()
+        layout.addLayout(h)
+        filter_container.setLayout(layout)
+        return filter_container
+
+    def create_results_table(self):
+        """Create results table"""
+        self.results_table = QTableWidget()
+        self.results_table.setColumnCount(8)
+        headers = [
+            "", 
+            self.tr("Anomalie"), 
+            self.tr("ID 1"), 
+            self.tr("ID 2"), 
+            self.tr("Mesure"), 
+            self.tr("Ratio/Dist"), 
+            self.tr("Gravité"), 
+            self.tr("Action")
+        ]
+        self.results_table.setHorizontalHeaderLabels(headers)
+        self.results_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.results_table.verticalHeader().setVisible(False)
+        self.results_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.results_table.setColumnWidth(0, 36)
+        self.results_table.setColumnWidth(7, 140)
+        self.results_table.cellClicked.connect(self._on_row_clicked)
+        self.results_table.doubleClicked.connect(self._on_table_double_click)
+
+    # ========================================================================
+    # LAYER MANAGEMENT - MODULARIZED
+    # ========================================================================
+
+    def load_project_layers(self):
+        """Load project layers - MODULARIZED"""
+        LayerSelectionManager.load_project_layers(self)
+
+    def get_selected_layers(self):
+        """Get selected layers with auto-fusion - MODULARIZED"""
+        return LayerSelectionManager.get_selected_layers(self)
+
+    # ========================================================================
+    # ANALYSIS
+    # ========================================================================
+
+    def run_analysis(self):
+        """Launch analysis"""
+        try:
+            layers = self.get_selected_layers()
+            if not any(layers.values()):
+                QMessageBox.warning(self, self.tr("Attention"), self.tr("Aucune couche valide sélectionnée."))
+                return
+            
+            if not self._validate_crs_selection():
+                return
+            
+            params = {
+                'profile': self.profile_combo.currentText(),
+                'output_crs': self.crs_selector.crs() if self.radio_crs_custom.isChecked() else None,
+                'create_result_layer': self.create_layer_checkbox.isChecked(),
+                'generate_fid': self.generate_fid_checkbox.isChecked(),
+                'min_display_area': float(1.0)
+            }
+            
+            self.btn_analyze.setEnabled(False)
+            self.btn_cancel.setEnabled(True)
+            self._clear_results()
+            self._log_message("info", self.tr("Démarrage de l'analyse (tâche QGIS)..."))
+
+            self.task = AnalysisTask(
+                description="KAT Overlap",
+                layers=layers,
+                params=params,
+                id_fields=self.id_fields,
+                generate_fid=params['generate_fid'],
+                on_progress=self._on_task_progress,
+                on_log=self._on_task_log,
+                on_finished=self._on_task_finished,
+                on_error=self._on_task_error
+            )
+            QgsApplication.taskManager().addTask(self.task)
+        
+        except Exception as e:
+            self._log_message("error", self.tr("Erreur lancement analyse: {}\n{}").format(e, traceback.format_exc()))
+            self.btn_analyze.setEnabled(True)
+            self.btn_cancel.setEnabled(False)
+
+    def _validate_crs_selection(self):
+        """Validate CRS selection"""
+        if self.radio_crs_custom.isChecked():
+            crs = self.crs_selector.crs()
+            if not crs.isValid():
+                QMessageBox.warning(self, self.tr("CRS invalide"), self.tr("Veuillez sélectionner un système de coordonnées valide"))
+                return False
+        return True
+
+    def _cancel_task(self):
+        """Cancel running task"""
+        try:
+            if self.task:
+                self.task.cancel()
+                self._log_message("info", self.tr("Annulation demandée."))
+                self.btn_cancel.setEnabled(False)
+        except Exception as e:
+            self._log_message("error", self.tr("Erreur annulation: {}").format(e))
+
+    def _on_task_progress(self, pct: int, message: Optional[str] = None):
+        """Task progress callback"""
+        if message:
+            self._log_message("info", message)
+
+    def _on_task_log(self, level, msg):
+        """Task log callback"""
+        self._log_message(level, msg)
+
+    def _on_task_finished(self, results: List[Dict[str, Any]]):
+        """Task finished callback - MODULARIZED"""
+        try:
+            self._log_message("info", self.tr("Analyse terminée."))
+            self.btn_analyze.setEnabled(True)
+            self.btn_cancel.setEnabled(False)
+            self._original_results = results or []
+            
+            first_type = results[0].get("type", "") if results else None
+            
+            # MODULARIZED: Set headers
+            ResultsTableManager.set_results_headers_for_type(self, first_type)
+            
+            # MODULARIZED: Populate table
+            ResultsTableManager.populate_results_table(self, results or [])
+            
+            # MODULARIZED: Build overlap geometries
+            VisualizationManager.build_overlap_geometries_from_results(self, results or [])
+            
+            # Update stats
+            self._update_stats_labels()
+            
+            # MODULARIZED: Create result layer
+            if self.create_layer_checkbox.isChecked() and results:
+                self._create_result_layer(results)
+            
+            self.task = None
+        
+        except Exception as e:
+            self._log_message("error", self.tr("Erreur on_finished: {}\n{}").format(e, traceback.format_exc()))
+
+    def _on_task_error(self, message: str):
+        """Task error callback"""
+        self._log_message("error", message)
+        self.btn_analyze.setEnabled(True)
+        self.btn_cancel.setEnabled(False)
+        self.task = None
+
+    # ========================================================================
+    # RESULTS MANAGEMENT
+    # ========================================================================
+
+    def _create_result_layer(self, results: list):
+        """Create result layer - MODULARIZED"""
+        self.result_layer = ResultLayerBuilder.create_result_layer(self, results)
+
+    def _clear_results(self):
+        """Clear results"""
+        try:
+            self.results_table.setRowCount(0)
+            self.selected_rows.clear()
+            self.overlap_geometries = []
+            self._original_results = []
+            
+            if self.export_btn:
+                self.export_btn.setEnabled(False)
+            if self.correct_btn:
+                self.correct_btn.setEnabled(False)
+            
+            self._update_stats_labels()
+            
+            if hasattr(self, "log_text") and self.log_text:
+                self.log_text.clear()
+        except Exception:
+            pass
+
+    def _update_stats_labels(self):
+        """Update statistics labels"""
+        try:
+            results = self._original_results
+            total = len(results)
+            
+            severities = {self.tr("Critique"): 0, self.tr("Élevé"): 0, self.tr("Modéré"): 0, self.tr("Faible"): 0}
+            
+            for r in results:
+                area = r.get("area_m2", 0.0)
+                anomaly = r.get("anomaly", "")
+                
+                if anomaly in ("doublon", "point_duplicate", "point_proximity"):
+                    severities[self.tr("Élevé")] += 1
+                elif area > 100:
+                    severities[self.tr("Critique")] += 1
+                elif area > 10:
+                    severities[self.tr("Élevé")] += 1
+                elif area > 1:
+                    severities[self.tr("Modéré")] += 1
+                else:
+                    severities[self.tr("Faible")] += 1
+            
+            self.stat_labels[self.tr("Total")].setText(str(total))
+            self.stat_labels[self.tr("Critique")].setText(str(severities[self.tr("Critique")]))
+            self.stat_labels[self.tr("Élevé")].setText(str(severities[self.tr("Élevé")]))
+            self.stat_labels[self.tr("Modéré")].setText(str(severities[self.tr("Modéré")]))
+            self.stat_labels[self.tr("Faible")].setText(str(severities[self.tr("Faible")]))
+        
+        except Exception as e:
+            self._log_message("error", self.tr("Erreur stats: {}").format(e))
+
+    # ========================================================================
+    # TABLE INTERACTIONS - MODULARIZED
+    # ========================================================================
+
+    def _on_row_clicked(self, row: int, column: int):
+        """Handle row click - MODULARIZED"""
+        try:
+            if row < len(self._original_results):
+                result = self._original_results[row]
+                VisualizationManager.highlight_overlap(self, row, result)
+        except Exception as e:
+            self._log_message("error", self.tr("Erreur _on_row_clicked: {}").format(e))
+
+    def _on_table_double_click(self, index):
+        """Handle double click - zoom to feature"""
+        try:
+            row = index.row()
+            if row < len(self._original_results):
+                result = self._original_results[row]
+                # Simple zoom implementation (can be enhanced)
+                self._log_message("info", self.tr("Zoom sur ligne {}").format(row+1))
+        except Exception as e:
+            self._log_message("error", self.tr("Erreur double-click: {}").format(e))
+
+    def _on_severity_filter_changed(self, idx):
+        """Apply severity filter"""
+        try:
+            sel = self.combo_severity_filter.currentText()
+            visible_count = 0
+            
+            for r in range(self.results_table.rowCount()):
+                item = self.results_table.item(r, 6)
+                if not item:
+                    continue
+                
+                sev = item.text()
+                show = True
+                
+                if sel == self.tr("Tout"):
+                    show = True
+                elif sel == self.tr("Critique + Élevée"):
+                    show = sev in (self.tr("Critique"), self.tr("Élevé"), self.tr("Élevée"))
+                elif sel == self.tr("Modéré + Faible"):
+                    show = sev in (self.tr("Modéré"), self.tr("Faible"))
+                else:
+                    show = (sev == sel)
+                
+                self.results_table.setRowHidden(r, not show)
+                if show:
+                    visible_count += 1
+            
+            self._log_message("info", self.tr("Filtre: {} → {}/{} lignes").format(sel, visible_count, self.results_table.rowCount()))
+        
+        except Exception as e:
+            self._log_message("error", self.tr("Erreur filtre: {}").format(e))
+
+    # ========================================================================
+    # EXPORTS - MODULARIZED
+    # ========================================================================
+
+    def export_results(self):
+        """Export selected results to CSV - MODULARIZED"""
+        UIExportManager.export_results(self)
+
+    def export_result_layer(self):
+        """Export result layer - MODULARIZED"""
+        UIExportManager.export_result_layer(self)
+
+    def export_selected_entities_by_id(self, use_action_supprimer_only: bool = False):
+        """Export selected entities by ID - MODULARIZED"""
+        UIExportManager.export_selected_entities_by_id(self, use_action_supprimer_only)
+
+    # ========================================================================
+    # CORRECTIONS - MODULARIZED
+    # ========================================================================
+
+    def _on_correct_selection(self):
+        """Apply corrections - MODULARIZED"""
+        CorrectionManager.apply_corrections_from_table(self)
+
+    # ========================================================================
+    # UTILITIES
+    # ========================================================================
+
+    def _on_profile_selection_changed(self, text):
+        """Handle profile selection change"""
+        try:
+            preset = PresetManager.get_preset(text)
+            layers = self.get_selected_layers()
+            geom_type = 'polygon' if layers.get('polygon') else ('point' if layers.get('point') else 'line')
+            info_html = PresetManager.format_threshold_info(preset, geom_type)
+            self.log_text.clear()
+            self.log_text.append(self.tr("[i] Profil: {}").format(text))
+            self.log_text.append(info_html)
+        except Exception:
+            self._log_message("info", self.tr("Profil: {}").format(text))
+
+    def _log_message(self, level, message):
+        """Log message to UI"""
+        prefix = {"info": self.tr("[i]"), "warning": self.tr("[!]"), "error": self.tr("[x]")}
+        txt = f"{prefix.get(level, '')} {message}"
+        try:
+            if hasattr(self, "log_text") and self.log_text is not None:
+                self.log_text.append(txt)
+        except Exception:
+            print(LOG_TAG, txt)
+
+    def _on_reset_ui(self):
+        """Reset UI state"""
+        for lid, w in self.layer_widgets.items():
+            try:
+                w['checkbox'].blockSignals(True)
+                w['checkbox'].setChecked(False)
+                w['checkbox'].blockSignals(False)
+                w['id_combo'].setCurrentIndex(0)
+            except Exception:
+                pass
+        
+        self.id_fields.clear()
+        self.selected_layers.clear()
+        self._clear_results()
+        self.log_text.clear()
+
+    # ========================================================================
+    # CLEANUP - MODULARIZED
+    # ========================================================================
+
+    def closeEvent(self, event):
+        """Handle dialog close - MODULARIZED cleanup"""
+        try:
+            if hasattr(self, 'update_timer'):
+                self.update_timer.stop()
+        except Exception:
+            pass
+        
+        # MODULARIZED: Cleanup temp layers
+        TempLayerManager.cleanup_temp_layers(self)
+        
+        # MODULARIZED: Cleanup rubber bands
+        TempLayerManager.cleanup_rubber_bands(self)
+        
+        try:
+            self._clear_results()
+            self.selected_layers.clear()
+            self.id_fields.clear()
+        except Exception:
+            pass
+        
+        if self.task:
+            try:
+                self.task.cancel()
+            except Exception:
+                pass
+        
+        event.accept()
