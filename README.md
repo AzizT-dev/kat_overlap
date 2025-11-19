@@ -66,16 +66,25 @@ Installer
 Redémarrer QGIS
 ```
 
-### Méthode 2 : Installation manuelle
+### Méthode 2 : Installation manuelle ⚠️
 ```bash
-# 1. Cloner le dépôt
-git clone https://github.com/AzizT-dev/kat_overlap.git
 
-# 2. Zipper le dossier
-zip -r kat_overlap.zip kat_overlap/
+> **Remarque :** Le ZIP téléchargé directement depuis GitHub (`kat_overlap-main.zip`) **ne peut pas** être installé tel quel dans QGIS. Il faut le préparer correctement.
 
-# 3. Dans QGIS :
-# Extensions → Installer depuis un ZIP → Sélectionner kat_overlap.zip
+1. **Télécharger le ZIP depuis GitHub**  
+   - Cliquez sur **Code → Download ZIP** pour obtenir `kat_overlap-main.zip`.
+
+2. **Préparer le ZIP pour QGIS**  
+   - Décompressez `kat_overlap-main.zip`. Cela crée un dossier `kat_overlap-main` contenant **un second dossier `kat_overlap-main`** avec tous les fichiers du plugin.  
+   - Renommez ce second dossier `kat_overlap-main` en `kat_overlap`.  
+   - Recompressez **uniquement ce dossier** en `kat_overlap.zip`.
+
+3. **Installer dans QGIS**  
+   - Ouvrez QGIS → **Extensions → Installer depuis un ZIP**.  
+   - Sélectionnez le fichier `kat_overlap.zip` préparé.
+
+✅ Le plugin devrait maintenant apparaître dans la liste des extensions installées.
+
 ```
 
 ### Prérequis
