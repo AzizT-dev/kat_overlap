@@ -512,7 +512,7 @@ Vous êtes libre d'utiliser, modifier et redistribuer le code tant que la même 
 
 | Version | Date | Changements majeurs |
 |---------|------|---------------------|
-| **1.0.0** | 2025-11-15 | 🎉 **Version initiale**<br>✅ Support Points, Lignes, Polygones<br>✅ Modes strict et groupé pour points<br>✅ Analyse topologique des lignes<br>✅ Multi-couches avec ID distincts<br>✅ Classification contextuelle<br>✅ Export Excel robuste<br>✅ **Fusion multi-couches (NEW)**<br>✅ **Correction intégrée (NEW)**<br>✅ **Interface moderne (NEW)** |
+| **1.0.0** | 2025-11-18 | 🎉 **Version initiale**<br>✅ Support Points, Lignes, Polygones<br>✅ Modes strict et groupé pour points<br>✅ Analyse topologique des lignes<br>✅ Multi-couches avec ID distincts<br>✅ Classification contextuelle<br>✅ Export Excel robuste<br>✅ **Fusion multi-couches (NEW)**<br>✅ **Correction intégrée (NEW)**<br>✅ **Interface moderne (NEW)** |
 
 ---
 
@@ -521,7 +521,7 @@ Vous êtes libre d'utiliser, modifier et redistribuer le code tant que la même 
 Vous pouvez :
 - 🐛 Signaler un bug via [GitHub Issues](https://github.com/AzizT-dev/kat_overlap/issues)
 - 💡 Proposer des améliorations
-- 🌍 Contribuer aux traductions (FR / EN / ES)
+- 🌍 Contribuer aux traductions (FR / EN / ES / AR)
 - 📖 Améliorer la documentation
 - ⭐ Partager vos retours d'expérience
 - 🔧 Soumettre des Pull Requests
