@@ -566,7 +566,7 @@ Merci aux utilisateurs pour leurs suggestions d'amélioration.
 
 <div align="center">
   
-### 🚀 Développé avec ❤️ par KAT Explorer GIS
+### Développé par KAT Explorer GIS
 
 **v1.0.0 - Novembre 2025**
 
