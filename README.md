@@ -123,32 +123,43 @@ zip -r kat_overlap.zip kat_overlap/
 ## 📂 Structure du projet
 
 ```
-kat_overlap/
+📁 kat_overlap/
 ├── 📄 icon.png                    # Icône du plugin (32×32)
 ├── 📄 metadata.txt                # Métadonnées QGIS
-├── 📄 README.md                   # Cette documentation
-├── 📄 __init__.py                 # Initialisation
+├── 📄 README.md                   # Documentation
+├── 📄 __init__.py                 # Initialisation du plugin
 ├── 📜 kat_overlap.py              # Point d'entrée principal
-├── 🎨 kat_overlap_ui.py           # Interface utilisateur
+├── 🎨 kat_overlap_ui.py           # Interface utilisateur moderne
 │
-├── 📁 core/
+├── 📁 core/                       # Cœur fonctionnel
 │   ├── __init__.py
 │   ├── 📊 analysis_task.py        # Moteur d'analyse (QGIS Task)
 │   ├── 🏷️  classification.py      # Profils métier + classification
-│   └── 🏗️  layer_manager.py       # Gestion + fusion couches
+│   ├── 🛠️  correction_manager.py  # Gestion des corrections
+│   ├── 🔧 layer_helpers.py        # Aide à la sélection des couches
+│   ├── 🏗️  layer_manager.py       # Gestion + fusion couches
+│   ├── 📋 results_table_manager.py # Gestion du tableau de résultats
+│   ├── 🗑️  temp_layer_manager.py  # Gestion des couches temporaires
+│   ├── 📤 ui_export_manager.py    # Gestion de l'export depuis l'UI
+│   └── 👁️  visualization.py       # Visualisation des résultats
 │
-├── 📁 utils/
+├── 📁 utils/                      # Utilitaires
 │   ├── __init__.py
 │   ├── 📤 file_utils.py           # Export CSV/TXT
-│   └── 📊 result_exporter.py      # Export GPKG/SHP/XLSX/GeoJSON
+│   ├── 🔍 id_resolver.py          # Résolution des identifiants
+│   ├── 📊 result_exporter.py      # Export GPKG/SHP/XLSX/GeoJSON
+│   └── 🎯 result_layer_utils.py   # Utilitaires couches résultats
 │
-└── 📁 i18n/
+├── 📁 ui/                         # Interface utilisateur
+│   ├── __init__.py
+│   └── 🎨 theme.py                # Gestion des thèmes UI
+│
+└── 📁 i18n/                       # Fichiers de traduction
     ├── kat_overlap_fr.qm          # Français compilé
-    ├── kat_overlap_en.qm          # Anglais compilé
-    └── kat_overlap_es.qm          # Espagnol compilé
+    ├── kat_overlap_en.qm          # Anglais compilé  
+    ├── kat_overlap_es.qm          # Espagnol compilé
+    └── kat_overlap_ar.qm          # Arabe compilé
 ```
-
----
 
 ## 🧬 Architecture interne
 
