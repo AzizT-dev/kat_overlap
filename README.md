@@ -69,7 +69,7 @@ Redémarrer QGIS
 ### Méthode 2 : Installation manuelle ⚠️
 ```bash
 
-> **Remarque :** Le ZIP téléchargé directement depuis GitHub (`kat_overlap-main.zip`) **ne peut pas** être installé tel quel dans QGIS. Il faut le préparer correctement.
+> ### Remarque :### Le ZIP téléchargé directement depuis GitHub (`kat_overlap-main.zip`) **ne peut pas** être installé tel quel dans QGIS. Il faut le préparer correctement.
 
 1. **Télécharger le ZIP depuis GitHub**  
    - Cliquez sur **Code → Download ZIP** pour obtenir `kat_overlap-main.zip`.
