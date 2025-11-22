@@ -1,6 +1,6 @@
 # 🧩 KAT Analyse – Overlap Area (Multi-Types) for QGIS
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/AzizT-dev/kat_overlap/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/AzizT-dev/kat_overlap/releases)
 [![License: GPL v3](https://img.shields.io/badge/license-GPLv3-green.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![QGIS](https://img.shields.io/badge/QGIS-%E2%89%A53.22-brightgreen.svg)](https://qgis.org)
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org)
@@ -8,7 +8,7 @@
 
 ---
 
-**KAT Analyse – Overlap Area** est un plugin QGIS universel de **contrôle qualité géométrique et topologique** avec **fusion multi-couches intégrée** et **topologie cadastrale point-polygone**.
+**KAT Analyse – Overlap Area** est un plugin QGIS universel de **contrôle qualité géométrique et topologique** avec **fusion multi-couches intégrée**.
 
 Il détecte, mesure, classe et corrige les anomalies pour **tous les types de géométries vectorielles** : **points**, **lignes** et **polygones**, aussi bien en **mode mono-couche** qu'en **mode multi-couches** (jusqu'à 4 couches).
 
@@ -22,19 +22,13 @@ L'outil s'adapte aux besoins de : **cadastre**, **réseaux**, **cartographie**, 
 - Points (doublons, proximité)
 - Lignes (topologie, intersections)
 - Polygones (chevauchements, auto-intersections)
-- **Point + Polygone** (topologie cadastrale complète - NEW v2.0)
+- **Point + Polygone** (appartenance / containment inter-couches)
 
 🔄 **Fusion multi-couches automatique**  
 - Jusqu'à 4 couches du même type fusionnées automatiquement
 - Support : Point-Point, Ligne-Ligne, Polygone-Polygone
 - Champ `__source_layer_id` pour traçabilité complète
 - Analyse unique sur données fusionnées
-
-📍 **Topologie cadastrale point-polygone (NEW v2.0)**  
-- Association ID (orphan_point, orphan_polygon)
-- Comptage sommets (vertex_count_mismatch)
-- Précision coordonnées (point_vertex_mismatch)
-- Sommets partagés entre parcelles adjacentes (shared_vertex_missing)
 
 🎨 **Interface intuitive et ergonomique**  
 - Sélection rapide (header cliquable)
@@ -45,20 +39,17 @@ L'outil s'adapte aux besoins de : **cadastre**, **réseaux**, **cartographie**, 
 🔧 **Correction intégrée**  
 - Suppression intelligente des doublons
 - Réparation géométrique QGIS
-- Backup automatique avant modification
 - Traçabilité complète des modifications
 
 📊 **Classification intelligente**  
 - Profils métier contextuels (Cadastre, BTP, Topographie, Hydrologie)
 - Calculs de surface et ratio
 - Mesures de proximité exactes
-- Classification adaptée au contexte cadastral
 
-🚀 **Performance optimisée (NEW v2.0)**  
-- Index spatial R-tree avec optimisation O(N log N)
-- Threading thread-safe pour grandes volumétries
+🚀 **Performance optimisée**  
+- Index spatial R-tree
+- Threading pour grandes volumétries
 - Gestion mémoire efficace
-- Transactions sûres avec rollback automatique
 
 ---
 
@@ -85,12 +76,12 @@ Redémarrer QGIS
 
 2. **Préparer le ZIP pour QGIS**  
    - Décompressez `kat_overlap-main.zip`. Cela crée un dossier `kat_overlap-main` contenant **un second dossier `kat_overlap-main`** avec tous les fichiers du plugin.  
-   - Renommez ce second dossier `kat_overlap-main` en `kat_overlap`.  
-   - Recompressez **uniquement ce dossier** en `kat_overlap.zip`.
+   - Renommez ce second dossier `kat_overlap-main` en `KAT`.  
+   - Recompressez **uniquement ce dossier** en `KAT.zip`.
 
 3. **Installer dans QGIS**  
    - Ouvrez QGIS → **Extensions → Installer depuis un ZIP**.  
-   - Sélectionnez le fichier `kat_overlap.zip` préparé.
+   - Sélectionnez le fichier `KAT.zip` préparé.
 
 ✅ Le plugin devrait maintenant apparaître dans la liste des extensions installées.
 
@@ -136,23 +127,9 @@ Redémarrer QGIS
 6. Résultats avec __source_layer_id (identifie la source)
 ```
 
-### Exemple 4 : Topologie cadastrale point-polygone (NEW v2.0)
-```
-1. Sélectionner 1 couche de points (bornes) + 1 couche de polygones (parcelles)
-2. Configurer champs ID pour association (ex: NUMERO_BORNE ↔ NUMERO_PARCELLE)
-3. Profil : "Land Registry/Cadastre (GPS ±2m)"
-4. Lancer l'analyse
-5. Résultats :
-   • orphan_point : Points sans parcelle associée
-   • orphan_polygon : Parcelles sans points
-   • vertex_count_mismatch : Nb points ≠ nb sommets
-   • point_vertex_mismatch : Coordonnées imprécises
-   • shared_vertex_missing : Sommets non partagés entre parcelles adjacentes
-```
-
 ---
 
-## 📂 Structure du projet (v2.0.0 - Restructuré)
+## 📂 Structure du projet
 
 ```
 📁 kat_overlap/
@@ -160,21 +137,24 @@ Redémarrer QGIS
 ├── 📄 metadata.txt                # Métadonnées QGIS
 ├── 📄 README.md                   # Documentation
 ├── 📄 __init__.py                 # Initialisation du plugin
-├── 📜 kat_overlap.py              # Point d'entrée principal (~150 LOC)
+├── 📜 kat_overlap.py              # Point d'entrée principal
+├── 🎨 kat_overlap_ui.py           # Interface utilisateur moderne
+│
+├── 📁 core/                       # Cœur fonctionnel
+│   ├── __init__.py
+│   ├── 🚀 analysis_engine.py        # Task orchestrator
+│   ├── 📊 polygon_analysis.py       # Polygon overlap detection 
+│   ├── 📏 line_analysis.py          # Line topology analysis
+│   ├── 📍 point_analysis.py         # Point/Cadastral analysis
+│   ├── 🏗️  layer_operations.py      # Layer utilities
+│   ├── 📋 results_handler.py        # Results management
+│   ├── 🏷️  classification.py        # Classification logic
+│   ├── 👁️  visualization.py         # Canvas visualization
+│   └── 🔧 utils.py                  # Utilities
 │
 ├── 📁 ui/                         # Interface utilisateur
 │   ├── __init__.py
-│   ├── 🎨 kat_overlap_ui.py       # Dialog + layout (~750 LOC)
-│   └── 🎨 theme.py                # Gestion des thèmes UI
-│
-├── 📁 core/                       # Cœur fonctionnel (8 fichiers optimisés)
-│   ├── __init__.py
-│   ├── 📊 analysis_engine.py      # Task + algorithmes optimisés avec spatial index (~650 LOC)
-│   ├── 🏗️  layer_operations.py    # Merge, corrector, export layer (~550 LOC)
-│   ├── 🏷️  classification.py      # Presets + classification (~280 LOC)
-│   ├── 📋 results_handler.py      # Table manager + layer builder + export (~600 LOC)
-│   ├── 👁️  visualization.py       # Rubberbands + highlight thread-safe (~350 LOC)
-│   └── 🔧 utils.py                # ID resolver, file utils, logging (~400 LOC)
+│   └── 🎨 kat_overlap_ui.py       # Interface utilisateur moderne
 │
 └── 📁 i18n/                       # Fichiers de traduction
     ├── kat_overlap_fr.qm          # Français compilé
@@ -183,20 +163,7 @@ Redémarrer QGIS
     └── kat_overlap_ar.qm          # Arabe compilé
 ```
 
-### 🎯 Améliorations architecture v2.0.0
-
-**Consolidation** : 17 fichiers → **8 fichiers** (~3800 LOC total)
-
-✅ **analysis_engine.py** : Moteur unifié avec spatial index (10-100x plus rapide)  
-✅ **layer_operations.py** : Fusion de layer_manager + layer_helpers + temp_layer_manager + correction_manager  
-✅ **results_handler.py** : Fusion de results_table_manager + result_layer_utils + result_exporter  
-✅ **utils.py** : Fusion de file_utils + id_resolver + logging  
-✅ **visualization.py** : Thread-safe avec QMetaObject.invokeMethod  
-✅ Chaque fichier < 800 LOC (conforme guidelines QGIS)
-
----
-
-## 🧬 Architecture interne (v2.0.0)
+## 🧬 Architecture interne
 
 ### Flux de traitement
 ```
@@ -204,40 +171,27 @@ UI (kat_overlap_ui.py)
     ↓
 run_analysis() → get_selected_layers()
     ↓
-[v1.0] Fusion multi-couches si N couches du même type
+[NEW] Fusion multi-couches si N couches du même type
     ↓
-AnalysisTask (analysis_engine.py) avec spatial indexing
-    ├─ MODE 1: Polygones seuls
-    │   ├─ _analyze_self_overlaps_indexed()      # O(N log N) au lieu de O(N²)
-    │   └─ _analyze_inter_overlaps_indexed()     # Multi-couches optimisé
-    │
-    ├─ MODE 2: Point + Polygone → CADASTRAL (NEW v2.0)
-    │   ├─ _check_point_polygon_id_matching()     # Association ID
-    │   ├─ _check_vertex_count_matching()         # Comptage sommets
-    │   ├─ _check_point_vertex_coordinates()      # Précision 1mm
-    │   └─ _check_shared_vertices()               # Sommets partagés
-    │
-    └─ MODE 3: Points seuls
-        └─ _analyze_point_proximity_indexed()     # Spatial index optimisé
+AnalysisTask (analysis_task.py)
+    ├─ _analyze_self_overlaps()       # Points / Lignes / Polygones mono-couche
+    ├─ _analyze_inter_layer_overlaps()  # Multi-couches (Poly+Poly, Point+Point, etc)
+    └─ _analyze_points_in_polygons()   # Point + Polygone
     ↓
 classification.py → PresetManager
     ├─ classify_point_proximity()      # Gravité points
     ├─ classify_polygon_overlap()      # Gravité polygones
     └─ classify_line_topology()        # Gravité lignes
     ↓
-results_handler.py → ResultsHandler
-    ├─ build_result_layer()            # Couche résultats normalisée
-    ├─ populate_table()                # Table UI thread-safe
-    └─ export_results()                # Multi-format (CSV/GPKG/XLSX/GeoJSON)
+Résultats → Tableau + Couche résultats
     ↓
-[v2.0] Correction avec backup automatique
-    ├─ layer_operations.LayerCorrector
-    │   ├─ create_backup()             # Backup GPKG avant modif
-    │   ├─ apply_corrections()         # Transaction sûre
-    │   └─ rollback_on_error()         # Restore si échec
+[NEW] Correction automatique via layer_manager.py
+    ├─ Points : delete features
+    ├─ Lignes : delete features
+    └─ Polygones : QGIS "Repair geometries"
 ```
 
-### Fusion multi-couches (v1.0)
+### Fusion multi-couches
 ```
 N couches sélectionnées (même type)
     ↓
@@ -258,79 +212,31 @@ Traitement comme 1 fichier interne
 Résultats avec identification source
 ```
 
-### Topologie cadastrale (v2.0)
-```
-Point layer + Polygon layer
-    ↓
-Mode détecté automatiquement
-    ↓
-4 vérifications topologiques
-    ├─ Check 1: Association ID
-    │   ├─ Point → Polygon (orphan_point si manquant)
-    │   └─ Polygon → Point (orphan_polygon si manquant)
-    │
-    ├─ Check 2: Comptage sommets
-    │   └─ Nb points doit égaler nb sommets du polygone
-    │
-    ├─ Check 3: Précision coordonnées
-    │   └─ Points doivent coïncider avec sommets (tolérance 1mm)
-    │
-    └─ Check 4: Sommets partagés (NEW - implémenté)
-        ├─ Extraction limite commune (boundary)
-        ├─ Extraction sommets des 2 polygones
-        ├─ Vérification : points de limite existent dans les 2 polygones
-        └─ Rapport anomalie si sommets non partagés détectés
-    ↓
-Résultats avec mesures cohérentes
-    ├─ measure = comptage ou 0.0 (pas d'aires)
-    ├─ ratio_percent = 0% (pas applicable)
-    └─ severity = Critical/High selon type
-```
-
 ---
 
 ## 🔄 Modes d'analyse disponibles
 
-### Mode 1: POLYGONES SEULS (1 couche ou multi-couches)
-
-| Type | Analyse | Détection | Mesures |
-|------|---------|-----------|---------|
-| **Polygones** | Chevauchements intra-couche | Surface + ratio | Aire (m²), Ratio (%) |
-| **Polygones** | Chevauchements inter-couches | Surface + ratio | Aire (m²), Ratio (%) |
-
-**Anomalies** : `polygon_overlap`, `inter_layer_polygon_overlap`
-
-### Mode 2: POINT + POLYGONE → CADASTRAL (NEW v2.0)
-
-| Check | Analyse | Détection | Anomalie | Sévérité |
-|-------|---------|-----------|----------|----------|
-| **1** | Association ID | Point sans polygone | `orphan_point` | Critical |
-| **1** | Association ID | Polygone sans points | `orphan_polygon` | Critical |
-| **2** | Comptage sommets | Nb points ≠ nb sommets | `vertex_count_mismatch` | High |
-| **3** | Précision coordonnées | Point ≠ sommet (>1mm) | `point_vertex_mismatch` | Critical |
-| **4** | Sommets partagés | Limite commune non partagée | `shared_vertex_missing` | High |
-
-**Mesures** : Comptages, flags (0.0 pour aires/ratios)
-
-### Mode 3: POINTS SEULS (1 couche ou multi-couches)
-
-| Type | Analyse | Détection | Mesures |
-|------|---------|-----------|---------|
-| **Points** | Doublons | Distance exacte | Distance (m) |
-| **Points** | Proximité | Distance < seuil | Distance (m) |
-
-**Anomalies** : `point_proximity`
-
-### Mode 4: LIGNES (1 couche ou multi-couches)
+### Mode INTERNE (1 couche)
 
 | Type | Analyse | Détection |
 |------|---------|-----------|
+| **Points** | Doublons | Distance exacte |
+| **Points** | Proximité | Distance < seuil |
 | **Lignes** | Topologie | Intersections, extrémités |
-| **Lignes** | Topologie inter-couches | Croisements |
+| **Polygones** | Chevauchements | Surface + ratio |
+
+### Mode INTER-COUCHES (2+ couches - v1.0)
+
+| Types | Analyse | Détection | Couches |
+|-------|---------|-----------|---------|
+| **Point + Polygone** | Appartenance / Containment | Points internes vs externes | 2+ couches (1 point + 1+ poly) |
+| **Polygone + Polygone** | Recouvrement inter-couches | Surface + ratio | Jusqu'à 4 polygones |
+| **Point + Point** | Doublons inter-couches | Distance exacte/proximité | Jusqu'à 4 points |
+| **Ligne + Ligne** | Topologie inter-couches | Intersections, croisements | Jusqu'à 4 lignes |
 
 ---
 
-## 🔗 Fusion Multi-Couches (v1.0)
+## 🔗 Fusion Multi-Couches
 
 ### Qu'est-ce que c'est ?
 
@@ -350,18 +256,58 @@ Sélectionner :
 Résultats avec __source_layer_id :
 ├─ Anomalie 1 : Source = Parcelle_Année2020
 ├─ Anomalie 2 : Source = Parcelle_Année2021
-└─ ...
+├─ Anomalie 3 : Source = Parcelle_Année2022
+└─ Anomalie 4 : Source = Parcelle_Année2023
 ```
 
-### Avantages
-- ✅ Analyse en 1 seul passage
-- ✅ Traçabilité complète via `__source_layer_id`
-- ✅ Comparaison inter-années automatique
-- ✅ Nettoyage automatique des couches temporaires
+### Fonctionnement technique
+
+| Étape | Action |
+|-------|--------|
+| 1️⃣ **Sélection** | Utilisateur coche 4 couches du même type |
+| 2️⃣ **Vérification** | Plugin vérifie compatibilité (structure tabulaire) |
+| 3️⃣ **Fusion** | Création couche temp `merged_[type]_4` en mémoire |
+| 4️⃣ **Traçabilité** | Ajout champ `__source_layer_id` = layer_id original |
+| 5️⃣ **Analyse** | Traitement comme 1 fichier interne |
+| 6️⃣ **Nettoyage** | Suppression couche temp à la fermeture |
+
+### Champ `__source_layer_id`
+
+Chaque entité fusionnée conserve l'ID de sa couche source :
+
+```python
+# Structure après fusion
+merged_polygon_4 :
+  - Feature 1: attributs_origine + __source_layer_id = "layer_uuid_2020"
+  - Feature 2: attributs_origine + __source_layer_id = "layer_uuid_2021"
+  - Feature 3: attributs_origine + __source_layer_id = "layer_uuid_2020"
+  - Feature 4: attributs_origine + __source_layer_id = "layer_uuid_2022"
+
+Résultat :
+  - Anomalie détectée entre Feature 1 et 3
+  - Affichage : "Overlapping features from same source (2020)"
+  - __source_layer_id permet identification / tri
+```
+
+### Limitations & Fallback
+
+| Situation | Comportement |
+|-----------|--------------|
+| **2-4 couches** | ✅ Fusion automatique |
+| **1 couche** | ✅ Traitement direct (pas de fusion) |
+| **5+ couches** | ❌ Limitation : max 4 acceptées |
+| **Structures différentes** | ⚠️ Fallback : utilise 1ère couche |
+| **Types géométriques mixtes** | ❌ Rejet : seulement même type |
+
+### Prérequis pour fusion
+
+✅ **Même type géométrique** : Tous Point OU tous Ligne OU tous Polygone  
+✅ **Même structure** : Même champs (noms + types) dans tous les fichiers  
+✅ **Géométries valides** : Évite les géométries vides/nulles
 
 ---
 
-## 📊 Classification automatique
+## 📊 Classification de gravité
 
 Chaque anomalie est classée selon le profil métier sélectionné :
 
@@ -372,28 +318,17 @@ Chaque anomalie est classée selon le profil métier sélectionné :
 | 🟡 **Modérée** | Mineure | Distance < 50% seuil | Ligne cassée | Recouvrement > 5% |
 | 🟢 **Faible** | Acceptable | Distance ≥ 50% seuil | Topologie ok | Recouvrement < 5% |
 
-### Classification cadastrale (v2.0)
-
-| Anomalie | Sévérité | Critère |
-|----------|----------|---------|
-| `orphan_point` | 🔴 Critical | Point sans polygone associé |
-| `orphan_polygon` | 🔴 Critical | Polygone sans points |
-| `vertex_count_mismatch` | 🟠 High | Nb points ≠ nb sommets |
-| `point_vertex_mismatch` | 🔴 Critical | Coordonnées > 1mm |
-| `shared_vertex_missing` | 🟠 High | Sommets non partagés |
-
 ---
 
 ## 🎓 Profils métier
 
-### 1️⃣ Cadastre & Foncier (v2.0 Enhanced)
+### 1️⃣ Cadastre & Foncier
 ```
-Contexte: Parcelles + bornes cadastrales
-Mode: Point + Polygone → Topologie cadastrale
+Contexte: Parcelles + sommets
+Mode: Points groupés par ID parcelle
 Tolérance: 0.001 m (1 mm)
 Profil: Foncier/Cadastre (±2m GPS)
-Objectif: Vérifier cohérence point-polygone, détecter orphelins
-Checks: 4 vérifications topologiques automatiques
+Objectif: Détecter vrais doublons, ignorer points partagés
 ```
 
 ### 2️⃣ BTP & Routes
@@ -475,100 +410,19 @@ export_layer_to_xlsx(
 ✓ Résultats avec __source_layer_id
 ```
 
-### Test 3 : Topologie cadastrale (NEW v2.0)
+### Test 3 : Compatibilité
 ```
-✓ Sélectionner 1 couche points + 1 couche polygones
-✓ Configurer champs ID
+✓ Sélectionner 2 polygones (structures différentes)
 ✓ Lancer analyse
-✓ Vérifier 4 types d'anomalies cadastrales détectées
-✓ Vérifier mesures cohérentes (0.0 pour aires, comptages pour vertex)
+✓ Log : "❌ Incompatibilité polygon: noms de champs différents"
+✓ Fallback : traitement avec 1ère couche uniquement
 ```
 
-### Test 4 : Performance spatial index
+### Test 4 : Nettoyage à la fermeture
 ```
-✓ Charger 10,000+ features
-✓ Lancer analyse
-✓ Vérifier temps < 10s (vs >100s sans index)
-✓ Vérifier même résultats qu'algorithme naïf
-```
-
-### Test 5 : Correction avec backup
-```
-✓ Lancer analyse
-✓ Cocher anomalies à corriger
-✓ Cliquer "Corriger"
-✓ Vérifier backup créé automatiquement
-✓ Simuler erreur → vérifier rollback fonctionne
-```
-
----
-
-## 🚀 Optimisations v2.0.0
-
-### 1. Spatial Indexing (10-100x plus rapide)
-```python
-# Avant (O(N²))
-for feat_a in layer.getFeatures():
-    for feat_b in layer.getFeatures():
-        if feat_a.geometry().intersects(feat_b.geometry()):
-            # analyse...
-
-# Après (O(N log N))
-index = QgsSpatialIndex()
-for feat in layer.getFeatures():
-    index.addFeature(feat)
-
-for feat_a in layer.getFeatures():
-    candidates = index.intersects(feat_a.geometry().boundingBox())
-    for candidate_id in candidates:
-        # test précis uniquement sur candidats...
-```
-
-### 2. Thread Safety (plus de crash GUI)
-```python
-# visualization.py
-def highlight_overlap(iface, result):
-    """Force appel sur thread principal Qt"""
-    QMetaObject.invokeMethod(
-        iface.mapCanvas(),
-        lambda: _do_highlight_internal(iface, result),
-        Qt.QueuedConnection
-    )
-```
-
-### 3. Transactions sûres avec backup
-```python
-# layer_operations.py
-class LayerCorrector:
-    def apply_corrections(self, feature_ids):
-        backup_path = self._create_backup()  # Backup auto avant modif
-        try:
-            self.layer.startEditing()
-            self.layer.deleteFeatures(feature_ids)
-            if not self.layer.commitChanges():
-                raise Exception("Commit failed")
-            return True
-        except Exception as e:
-            self.layer.rollBack()
-            self._restore_backup(backup_path)  # Restore auto si échec
-            raise e
-```
-
-### 4. Schema résultats normalisé
-```python
-RESULT_SCHEMA = {
-    'type': str,              # Type d'analyse
-    'anomaly': str,           # Type d'anomalie
-    'id_a': str, 'id_b': str, # FIDs
-    'id_a_real': str, 'id_b_real': str,  # IDs réels (champs configurés)
-    'layer_a_id': str, 'layer_b_id': str,
-    'measure': float,         # Mesure principale (aire, distance, comptage)
-    'area_m2': float,         # Aire (0.0 pour points/lignes)
-    'ratio': float,           # Ratio 0-1 (0.0 pour points/lignes)
-    'ratio_percent': float,   # Ratio % (0.0 pour points/lignes)
-    'severity': str,          # Critical/High/Medium/Low
-    'geometry_json': str      # GeoJSON pour visualisation
-}
+✓ Lancer analyse 4 couches
+✓ Fermer le plugin
+✓ Vérifier : couches "merged_*" supprimées de QGIS
 ```
 
 ---
@@ -593,30 +447,23 @@ Solution:
 3. Relancer l'export
 ```
 
-### Problème : Analyse très lente (>100s)
+### Problème : Couches temporaires non supprimées
 ```
-Cause: Spatial index non utilisé ou désactivé
+Cause: closeEvent() non appelé correctement
 Solution:
-1. Vérifier que analysis_engine.py utilise QgsSpatialIndex
-2. Vérifier logs pour "Building spatial index..."
-3. Mettre à jour vers v2.0.0 si version < 2.0
+1. Fermer le plugin via l'interface
+2. Vérifier pas de crash Python
+3. Nettoyer manuellement via QGIS
 ```
 
-### Problème : Crash lors du zoom sur anomalie
+### Problème : Fusion échoue avec "Incompatibilité"
 ```
-Cause: Appel GUI depuis thread worker
+Cause: Couches ont des champs différents
 Solution:
-1. Vérifier que visualization.py utilise QMetaObject.invokeMethod
-2. Mettre à jour vers v2.0.0 (thread-safe)
-```
-
-### Problème : Topologie cadastrale ne détecte rien
-```
-Cause: Champs ID non configurés
-Solution:
-1. Vérifier configuration des champs ID dans l'UI
-2. Logs doivent afficher "ID fields configured: point=X, polygon=Y"
-3. Vérifier que les valeurs ID matchent entre couches
+1. Vérifier layer.fields().names() identique
+2. Vérifier types de champs identiques
+3. Ajouter champs manquants aux couches
+4. Relancer analyse
 ```
 
 ---
@@ -637,7 +484,7 @@ Solution:
 
 | Contexte | Type de données | Objectif | Mode recommandé |
 |----------|----------------|----------|-----------------|
-| Cadastre | Points (bornes) + Polygones (parcelles) | Vérifier topologie cadastrale | Point-Polygon (v2.0) |
+| Cadastre | Points (sommets) | Détecter vrais doublons | Groupé par ID parcelle |
 | Routes | Lignes | Valider topologie | Une couche, tolérance 0.01m |
 | Réseaux | Points (équipements) | Détecter doublons | Strict, proximité 1m |
 | Parcelles | Polygones | Identifier chevauchements | Une couche, surface 0.01m² |
@@ -667,8 +514,7 @@ Vous êtes libre d'utiliser, modifier et redistribuer le code tant que la même 
 
 | Version | Date | Changements majeurs |
 |---------|------|---------------------|
-| **2.0.0** | 2025-11-21 | 🎉 **Architecture restructurée**<br>✅ **17 fichiers → 8 fichiers** (< 800 LOC chacun)<br>✅ **Spatial indexing** : O(N log N) au lieu de O(N²)<br>✅ **Thread-safe** : QMetaObject.invokeMethod pour GUI<br>✅ **Transactions sûres** : Backup automatique + rollback<br>✅ **Topologie cadastrale** : 4 checks point-polygone<br>✅ **Check 4 implémenté** : Sommets partagés entre parcelles<br>✅ **Schema normalisé** : ResultDTO unifié<br>✅ **Logging complet** : Debuggable avec traceback |
-| **1.0.0** | 2025-11-18 | 🎉 **Version initiale**<br>✅ Support Points, Lignes, Polygones<br>✅ Modes strict et groupé pour points<br>✅ Analyse topologique des lignes<br>✅ Multi-couches avec ID distincts<br>✅ Classification contextuelle<br>✅ Export Excel robuste<br>✅ **Fusion multi-couches**<br>✅ **Correction intégrée**<br>✅ **Interface moderne** |
+| **1.0.0** | 2025-11-18 | 🎉 **Version initiale**<br>✅ Support Points, Lignes, Polygones<br>✅ Modes strict et groupé pour points<br>✅ Analyse topologique des lignes<br>✅ Multi-couches avec ID distincts<br>✅ Classification contextuelle<br>✅ Export Excel robuste<br>✅ **Fusion multi-couches (NEW)**<br>✅ **Correction intégrée (NEW)**<br>✅ **Interface moderne (NEW)** |
 
 ---
 
@@ -697,7 +543,6 @@ Vous pouvez :
 - 🎓 [Guide de configuration](docs/config_guide.md)
 - 🔧 [Guide développeur](docs/developer_guide.md)
 - 🐛 [FAQ & Troubleshooting](docs/faq.md)
-- 📐 [Topologie cadastrale](docs/cadastral_topology.md) (NEW v2.0)
 
 ---
 
@@ -725,6 +570,6 @@ Merci aux utilisateurs pour leurs suggestions d'amélioration.
   
 ### Développé par KAT Explorer GIS
 
-**v2.0.0 - Novembre 2025**
+**v1.0.0 - Novembre 2025**
 
 </div>
