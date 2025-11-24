@@ -39,7 +39,7 @@ def detect_analysis_type(results: List[Dict[str, Any]]) -> str:
     if 'point_proximity' in anomaly_types:
         return 'point'
     
-    line_types = {'line_intersection', 'line_gap', 'dangling_node'}
+    line_types = {'line_self_intersection', 'line_overlap', 'line_dangle'}
     if anomaly_types & line_types:
         return 'line'
     
