@@ -20,12 +20,12 @@ from PyQt5.QtGui import QColor
 from qgis.core import QgsProject, QgsVectorLayer, QgsApplication
 from qgis.gui import QgsProjectionSelectionWidget
 
-from KAT.core.utils import log_message, tr, TempLayerTracker
-from KAT.core.classification import PresetManager
-from KAT.core.analysis_engine import AnalysisTask
-from KAT.core.layer_operations import merge_layers_to_temp
-from KAT.core.results_handler import ResultsTableManager, ResultLayerBuilder, ResultExporter
-from KAT.core.visualization import create_visualization_manager
+from ..core.utils import log_message, tr, TempLayerTracker
+from ..core.classification import PresetManager
+from ..core.analysis_engine import AnalysisTask
+from ..core.layer_operations import merge_layers_to_temp
+from ..core.results_handler import ResultsTableManager, ResultLayerBuilder, ResultExporter
+from ..core.visualization import create_visualization_manager
 
 
 class ModernKatOverlapUI(QDialog):
