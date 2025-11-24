@@ -1,8 +1,9 @@
 [general]
 name=KAT Analyse - Overlap area (Multi-Types)
 qgisMinimumVersion=3.22
-description=Analyse spatiale : détecte et classe les anomalies géométriques pour points, lignes et polygones (doublons, topologie, chevauchements) avec modes adaptatifs et export complet.
-about=KAT Analyse - Overlap area est un outil de contrôle qualité spatiale qui s'adapte intelligemment au type de géométrie analysée.
+description=Spatial analysis plugin that detects and classifies geometric anomalies for points, lines and polygons (duplicates, topology issues, overlaps). Includes adaptive modes and full export features.
+about=KAT Analyse - Overlap area is a spatial quality-control tool that automatically adapts its detection rules to the geometry type. It identifies overlaps, intersections, duplicates and topological inconsistencies, and provides detailed reports and visualization tools.
+
 version=1.0.0
 author=Aziz T.
 email=aziz.explorer@gmail.com
@@ -20,21 +21,21 @@ tags=overlap,analysis,topology,quality,validation,geometry,point,line,polygon,in
 
 [changelog]
 changelog=1.0.0 (2025-11-18)
-    - Version initiale Multi-Types
-    - Support complet Points, Lignes, Polygones
-    - Mode strict vs groupé pour analyse de points
-    - Analyse topologique des lignes (superpositions, croisements, connexions)
-    - Analyse multi-couches avec ID distincts par couche
-    - Classification contextuelle de la gravité selon le type
-    - Interface adaptative selon le type de géométrie
-    - Export Excel robuste avec gestion d'erreur
-    - Correction RuntimeError sur suppression de couche
-    - Documentation complète (3 profils d'utilisation)
-    - Support multi-CRS avec reprojection automatique
-    - Threading optimisé pour grandes volumétries
-    - Couche temporaire avec symbologie graduée
-    - Filtrage dynamique par gravité
-    - Zoom interactif sur résultats
+    - Initial Multi-Type version
+    - Full support for Points, Lines, Polygons
+    - Strict vs grouped modes for point analysis
+    - Topology checks for lines (overlaps, crossings, connections)
+    - Multi-layer analysis with per-layer feature IDs
+    - Contextual severity classification
+    - Adaptive UI based on geometry type
+    - Robust Excel export with error handling
+    - Fixed RuntimeError on layer deletion
+    - Complete documentation (3 usage profiles)
+    - Multi-CRS support with automatic reprojection
+    - Optimized threading for large datasets
+    - Temporary layer with graduated symbology
+    - Dynamic severity filtering
+    - Interactive zoom to results
 
 [help]
 documentation=https://github.com/AzizT-dev/kat_overlap/blob/main/README.md
