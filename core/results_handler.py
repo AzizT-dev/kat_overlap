@@ -45,6 +45,20 @@ def detect_analysis_type(results: List[Dict[str, Any]]) -> str:
     
     return 'polygon'
 
+def normalize_severity(raw):
+    """Normalize various severity text values to canonical keys:
+    returns one of: 'critical', 'high', 'moderate', 'low'
+    """
+    if raw is None:
+        return 'low'
+    s = str(raw).strip().lower()
+    if 'crit' in s:
+        return 'critical'
+    if 'high' in s:
+        return 'high'
+    if 'mod' in s:
+        return 'moderate'
+    return 'low'
 
 # ==================RESULTS TABLE MANAGER=====================
 
@@ -139,7 +153,7 @@ class ResultsTableManager:
                     col += 1
                 
                 # Severity column
-                severity = str(result.get('severity', 'Low'))
+                severity = normalize_severity(result.get('severity', 'low'))
                 sev_item = QTableWidgetItem(severity)
                 sev_item.setForeground(ResultsTableManager._get_severity_color(severity))
                 table.setItem(row_idx, col, sev_item)
@@ -214,7 +228,7 @@ class ResultLayerBuilder:
                     'point': "Point_proximity_results",
                     'line': "Line_topology_results"
                 }
-                layer_name = f"{type_names.get(analysis_type, 'Results')}_{len(results)}"
+                layer_name = f"temp_{type_names.get(analysis_type, 'Unknown')}"
             
             # Collect valid geometries
             geom_types = set()
