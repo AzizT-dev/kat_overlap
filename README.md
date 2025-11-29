@@ -1,6 +1,6 @@
 # 🧩 KAT Analyse – Overlap Area (Multi-Types) for QGIS
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/AzizT-dev/kat_overlap/releases)
+[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](https://github.com/AzizT-dev/kat_overlap/releases)
 [![License: GPL v3](https://img.shields.io/badge/license-GPLv3-green.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![QGIS](https://img.shields.io/badge/QGIS-%E2%89%A53.22-brightgreen.svg)](https://qgis.org)
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org)
@@ -512,9 +512,10 @@ Vous êtes libre d'utiliser, modifier et redistribuer le code tant que la même 
 
 ## 🧾 Journal des versions
 
-| Version | Date | Changements majeurs |
-|---------|------|---------------------|
-| **1.0.0** | 2025-11-18 | 🎉 **Version initiale**<br>✅ Support Points, Lignes, Polygones<br>✅ Modes strict et groupé pour points<br>✅ Analyse topologique des lignes<br>✅ Multi-couches avec ID distincts<br>✅ Classification contextuelle<br>✅ Export Excel robuste<br>✅ **Fusion multi-couches (NEW)**<br>✅ **Correction intégrée (NEW)**<br>✅ **Interface moderne (NEW)** |
+| Version | Date       | Changements majeurs                                                                           |
+| ------- | ---------- | --------------------------------------------------------------------------------------------- |
+| 1.0.0   | 2025-11-18 | Version initiale : Support multi-types, fusion multi-couches, classification contextuelle  |
+| 1.0.1   | 2025-11-29 | Correctif : Symbologie double sur couche résultats, noms de couches temporaires simplifiés |
 
 ---
 
@@ -570,6 +571,6 @@ Merci aux utilisateurs pour leurs suggestions d'amélioration.
   
 ### Développé par KAT Explorer GIS
 
-**v1.0.0 - Novembre 2025**
+**v1.0.1 - Novembre 2025**
 
 </div>
