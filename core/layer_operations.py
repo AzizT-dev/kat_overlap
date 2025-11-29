@@ -364,7 +364,6 @@ def apply_severity_symbology(layer: QgsVectorLayer):
     except Exception as e:
         log_message('warning', f"Symbology application failed: {e}")
 
-
 # ==================EXPORT=================
 
 def export_vector_layer(layer: QgsVectorLayer, path: str,
