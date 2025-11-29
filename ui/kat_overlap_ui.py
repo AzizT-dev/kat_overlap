@@ -602,7 +602,7 @@ class ModernKatOverlapUI(QDialog):
             return
         
         try:
-            from KAT.core.layer_operations import LayerCorrector
+            from ..core.layer_operations import LayerCorrector
             
             to_delete = {}
             
@@ -790,41 +790,71 @@ class ModernKatOverlapUI(QDialog):
     def _apply_topology_style(self, layer):
         """Apply red-green symbology like QGIS Topology Checker"""
         try:
-            from qgis.core import QgsCategorizedSymbolRenderer, QgsSymbol, QgsRendererCategory
-            
-            if not layer or not layer.isValid():
-                return
-            
-            categories = []
-            
-            for severity in [tr("Critical"), tr("High"), "Critical", "High"]:
-                symbol = QgsSymbol.defaultSymbol(layer.geometryType())
-                if symbol:
-                    symbol.setColor(QColor(255, 0, 0, 180))
-                    symbol.setOpacity(0.7)
-                    categories.append(QgsRendererCategory(severity, symbol, severity))
-            
-            for severity in [tr("Moderate"), "Moderate"]:
-                symbol = QgsSymbol.defaultSymbol(layer.geometryType())
-                if symbol:
-                    symbol.setColor(QColor(255, 165, 0, 180))
-                    symbol.setOpacity(0.7)
-                    categories.append(QgsRendererCategory(severity, symbol, severity))
-            
-            for severity in [tr("Low"), "Low"]:
-                symbol = QgsSymbol.defaultSymbol(layer.geometryType())
-                if symbol:
-                    symbol.setColor(QColor(0, 255, 0, 180))
-                    symbol.setOpacity(0.7)
-                    categories.append(QgsRendererCategory(severity, symbol, severity))
-            
-            if categories:
-                renderer = QgsCategorizedSymbolRenderer('severity', categories)
-                layer.setRenderer(renderer)
+            from qgis.PyQt.QtGui import QColor
+            from qgis.core import QgsCategorizedSymbolRenderer, QgsRendererCategory, QgsSymbol
+        except Exception:
+            # if imports fail, abort silently
+            return
+
+        if layer is None:
+            return
+
+        # mapping canonical key -> translated label
+        label_map = {
+            'critical': self.tr('Critical'),
+            'high': self.tr('High'),
+            'moderate': self.tr('Moderate'),
+            'low': self.tr('Low')
+        }
+        ordered_keys = ['critical', 'high', 'moderate', 'low']
+
+        # Build categories only for keys actually present in the layer (to keep legend clean)
+        present_keys = set()
+        # Try to read values from features if possible
+        try:
+            if layer.fields().indexOf('severity') != -1:
+                for f in layer.getFeatures():
+                    v = f['severity']
+                    if v is None:
+                        continue
+                    # normalize variants to canonical keys
+                    s = str(v).strip().lower()
+                    if 'crit' in s:
+                        present_keys.add('critical')
+                    elif 'high' in s:
+                        present_keys.add('high')
+                    elif 'mod' in s:
+                        present_keys.add('moderate')
+                    else:
+                        present_keys.add('low')
+        except Exception:
+            # if we cannot iterate features (large layer), default to all keys
+            present_keys = set(ordered_keys)
+
+        # preserve order
+        unique_keys = [k for k in ordered_keys if k in present_keys]
+
+        categories = []
+        for key in unique_keys:
+            symbol = QgsSymbol.defaultSymbol(layer.geometryType())
+            if key == 'critical':
+                symbol.setColor(QColor(255,0,0,180))
+            elif key == 'high':
+                symbol.setColor(QColor(255,165,0,180))
+            elif key == 'moderate':
+                symbol.setColor(QColor(255,200,0,140))
+            else:
+                symbol.setColor(QColor(0,255,0,140))
+            symbol.setOpacity(0.75)
+            categories.append(QgsRendererCategory(key, symbol, label_map.get(key, key)))
+
+        if categories:
+            renderer = QgsCategorizedSymbolRenderer('severity', categories)
+            layer.setRenderer(renderer)
+            try:
                 layer.triggerRepaint()
-            
-        except Exception as e:
-            self.log("warning", tr("Could not apply symbology: {}").format(e))
+            except Exception:
+                pass
     
     def log(self, level: str, message: str):
         """Log message to UI and QGIS log"""
