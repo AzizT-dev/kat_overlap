@@ -531,7 +531,7 @@ Vous êtes libre d'utiliser, modifier et redistribuer le code tant que la même 
 Vous pouvez :
 - 🐛 Signaler un bug via [GitHub Issues](https://github.com/AzizT-dev/kat_overlap/issues)
 - 💡 Proposer des améliorations
-- 🌍 Contribuer aux traductions (FR / EN / ES / AR)
+- 🌍 Contribuer aux traductions (FR | EN | ES | AR | DE | RU | ZH | PT | IT)
 - 📖 Améliorer la documentation
 - ⭐ Partager vos retours d'expérience
 - 🔧 Soumettre des Pull Requests
@@ -576,8 +576,8 @@ Merci aux utilisateurs pour leurs suggestions d'amélioration.
 
 <div align="center">
   
-### Développé par KAT Explorer GIS
+### Développé par Aziz TRAORE
 
-**v1.0.1 - Novembre 2025**
+**v1.0.2 - Décembre 2025**
 
 </div>
