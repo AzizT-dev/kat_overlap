@@ -4,7 +4,7 @@ qgisMinimumVersion=3.22
 description=Spatial analysis plugin that detects and classifies geometric anomalies for points, lines and polygons (duplicates, topology issues, overlaps). Includes adaptive modes and full export features.
 about=KAT Analyse - Overlap area is a spatial quality-control tool that automatically adapts its detection rules to the geometry type. It identifies overlaps, intersections, duplicates and topological inconsistencies, and provides detailed reports and visualization tools.
 
-version=1.0.1
+version=1.0.2
 author=Aziz T.
 email=aziz.explorer@gmail.com
 homepage=https://github.com/AzizT-dev/kat_overlap
@@ -20,11 +20,10 @@ category=Vector
 tags=overlap,analysis,topology,quality,validation,geometry,point,line,polygon,intersection,duplicate,cadastre,network,vector,spatial,quality-control,multi-types
 
 [changelog]
-changelog=1.0.1 (2025-11-29)
-    - Fixed double symbology applied on result layers
-    - All results and geometries now correctly displayed
-    - Temporary layer names simplified to temp_<type>
-    - Maintained full compatibility with multi-layer analysis and exports
+changelog=1.0.2 (2025-12-08)
+    - Added new language translation files
+    - Corrected the layout and presentation of the export report table
+    - Fixed minor display issues in the results panel
 
 [help]
 documentation=https://github.com/AzizT-dev/kat_overlap/blob/main/README.md
