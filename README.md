@@ -158,9 +158,14 @@ Redémarrer QGIS
 │
 └── 📁 i18n/                       # Fichiers de traduction
     ├── kat_overlap_fr.qm          # Français compilé
-    ├── kat_overlap_en.qm          # Anglais compilé  
+    ├── kat_overlap_en.qm          # Anglais compilé
     ├── kat_overlap_es.qm          # Espagnol compilé
-    └── kat_overlap_ar.qm          # Arabe compilé
+    ├── kat_overlap_ar.qm          # Arabe compilé
+    ├── kat_overlap_de.qm          # Allemand compilé
+    ├── kat_overlap_it.qm          # Italien compilé
+    ├── kat_overlap_pt.qm          # Portugais compilé
+    ├── kat_overlap_ru.qm          # Russe compilé
+    └── kat_overlap_zh.qm          # Chinois compilé
 ```
 
 ## 🧬 Architecture interne
