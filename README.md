@@ -1,6 +1,6 @@
 # 🧩 KAT Analyse – Overlap Area (Multi-Types) for QGIS
 
-[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](https://github.com/AzizT-dev/kat_overlap/releases)
+[![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](https://github.com/AzizT-dev/kat_overlap/releases)
 [![License: GPL v3](https://img.shields.io/badge/license-GPLv3-green.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![QGIS](https://img.shields.io/badge/QGIS-%E2%89%A53.22-brightgreen.svg)](https://qgis.org)
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org)
@@ -512,12 +512,14 @@ Vous êtes libre d'utiliser, modifier et redistribuer le code tant que la même 
 
 ## 🧾 Journal des versions
 
-| Version | Date       | Changements majeurs                                                                           |
-| ------- | ---------- | --------------------------------------------------------------------------------------------- |
-| 1.0.0   | 2025-11-18 | Version initiale : Support multi-types, fusion multi-couches, classification contextuelle  |
-| 1.0.1   | 2025-11-29 | Correctif : Symbologie double sur couche résultats, noms de couches temporaires simplifiés |
+| Version | Date       | Changements majeurs                                                                                   |
+| ------- | ---------- | ---------------------------------------------------------------------------------------------------- |
+| 1.0.0   | 2025-11-18 | Version initiale : support multi-types, fusion multi-couches, classification contextuelle          |
+| 1.0.1   | 2025-11-29 | Correctifs : symbologie double sur la couche de résultats, noms des couches temporaires simplifiés |
+| 1.0.2   | 2025-12-08 | Ajout des fichiers de traduction supplémentaires, correction de la présentation du tableau d’export, corrections mineures d’affichage dans le panneau résultats |
 
 ---
+
 
 ## 💬 Retours et contributions
 
